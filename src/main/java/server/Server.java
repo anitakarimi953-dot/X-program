@@ -1,6 +1,8 @@
 package server;
 
-import java.io.IOException;
+import common.Message;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -20,6 +22,14 @@ public class Server {
             Socket clientSocket = serverSocket.accept();
 
             System.out.println("Client connected!");
+
+            BufferedReader input = new BufferedReader(
+                    new InputStreamReader(clientSocket.getInputStream())
+            );
+
+            String message = input.readLine();
+
+            System.out.println("Message received: " + message);
 
             clientSocket.close();
 
