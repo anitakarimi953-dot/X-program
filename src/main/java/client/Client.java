@@ -1,5 +1,7 @@
 package client;
 
+import common.Message;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -21,9 +23,11 @@ public class Client {
                     socket.getOutputStream(), true
             );
 
-            output.println("Hello from client");
+            Message message = new Message("TEXT", "Hello from client");
 
-            System.out.println("Message sent!");
+            output.println(message);
+
+            System.out.println("Message sent: " + message);
 
         } catch (IOException e) {
             System.out.println("Client error: " + e.getMessage());
