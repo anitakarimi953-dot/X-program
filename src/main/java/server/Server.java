@@ -9,6 +9,7 @@ import java.net.Socket;
 public class Server {
 
     private final int port;
+    private final UserManager userManager = new UserManager();
 
     public Server(int port) {
         this.port = port;
