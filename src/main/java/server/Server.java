@@ -1,5 +1,7 @@
 package server;
 
+import com.google.gson.Gson;
+import common.Message;
 import common.User;
 
 import java.io.BufferedReader;
@@ -35,16 +37,20 @@ public class Server {
                     clientSocket.getOutputStream(), true
             );
 
-            String message = input.readLine();
+            Gson gson = new Gson();
 
-            System.out.println("Message received: " + message);
+            String jsonMessage = input.readLine();
 
-            if (message != null && message.startsWith("REGISTER|")) {
+            System.out.println("JSON received: " + jsonMessage);
 
-                String userData = message.substring("REGISTER|".length());
-                String[] parts = userData.split("\\|");
+            Message message = gson.fromJson(jsonMessage, Message.class);
+
+            if (message.getType().equals("REGISTER")) {
+
+                String[] parts = message.getContent().split("\\|");
 
                 if (parts.length == 2) {
+
                     String username = parts[0];
                     String password = parts[1];
 
@@ -61,12 +67,12 @@ public class Server {
                     }
                 }
 
-            } else if (message != null && message.startsWith("LOGIN|")) {
+            } else if (message.getType().equals("LOGIN")) {
 
-                String userData = message.substring("LOGIN|".length());
-                String[] parts = userData.split("\\|");
+                String[] parts = message.getContent().split("\\|");
 
                 if (parts.length == 2) {
+
                     String username = parts[0];
                     String password = parts[1];
 

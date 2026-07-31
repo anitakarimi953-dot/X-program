@@ -1,5 +1,6 @@
 package client;
 
+import com.google.gson.Gson;
 import common.Message;
 
 import java.io.BufferedReader;
@@ -29,14 +30,18 @@ public class Client {
                     new InputStreamReader(socket.getInputStream())
             );
 
+            Gson gson = new Gson();
+
             Message message = new Message(
                     "LOGIN",
                     "test|1234"
             );
 
-            output.println(
-                    message.getType() + "|" + message.getContent()
-            );
+            String jsonMessage = gson.toJson(message);
+
+            output.println(jsonMessage);
+
+            System.out.println("JSON sent: " + jsonMessage);
 
             String response = input.readLine();
 
