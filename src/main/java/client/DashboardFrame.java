@@ -1,86 +1,108 @@
 package client;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import common.Tweet;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.util.List;
 
 public class DashboardFrame extends JFrame {
 
     private final String sessionId;
     private final Client client;
 
-    private JTextArea tweetArea;
-    private JTextArea feedArea;
+    private final JTextArea tweetArea;
+    private final JTextArea feedArea;
+
+    private final Gson gson;
 
     public DashboardFrame(String sessionId) {
 
         this.sessionId = sessionId;
         this.client = new Client("localhost", 5000);
 
+        /*
+         * مهم:
+         * این Gson مخصوص کلاینت است.
+         * برای نمایش createdAt لازم نیست Gson مستقیماً
+         * LocalDateTime را به Tweet تبدیل کند؛
+         * JSON را پایین‌تر دستی می‌خوانیم.
+         */
+        this.gson = new Gson();
+
         setTitle("X-Program Dashboard");
         setSize(650, 600);
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         setLayout(new BorderLayout(10, 10));
 
-        // =========================
-        // TOP
-        // =========================
+        // =====================================================
+        // TOP PANEL
+        // =====================================================
 
         JPanel topPanel = new JPanel(
                 new GridLayout(2, 1)
         );
 
-        JLabel welcomeLabel =
-                new JLabel("Welcome to X-Program!");
+        JLabel welcomeLabel = new JLabel(
+                "Welcome to X-Program!"
+        );
 
-        JLabel sessionLabel =
-                new JLabel("Session: " + sessionId);
+        JLabel sessionLabel = new JLabel(
+                "Session: " + sessionId
+        );
 
         topPanel.add(welcomeLabel);
         topPanel.add(sessionLabel);
 
-        add(topPanel, BorderLayout.NORTH);
+        add(
+                topPanel,
+                BorderLayout.NORTH
+        );
 
-        // =========================
-        // CENTER
-        // =========================
+        // =====================================================
+        // CENTER PANEL
+        // =====================================================
 
-        JPanel centerPanel =
-                new JPanel(
-                        new BorderLayout(10, 10)
-                );
+        JPanel centerPanel = new JPanel(
+                new BorderLayout(10, 10)
+        );
 
-        // =========================
-        // CREATE TWEET
-        // =========================
+        // =====================================================
+        // CREATE TWEET PANEL
+        // =====================================================
 
-        JPanel createPanel =
-                new JPanel(
-                        new BorderLayout(5, 5)
-                );
+        JPanel createPanel = new JPanel(
+                new BorderLayout(5, 5)
+        );
 
-        JLabel tweetLabel =
-                new JLabel("Write your Tweet:");
+        JLabel tweetLabel = new JLabel(
+                "Write your Tweet:"
+        );
 
-        tweetArea =
-                new JTextArea(5, 40);
+        tweetArea = new JTextArea(
+                5,
+                40
+        );
 
         tweetArea.setLineWrap(true);
         tweetArea.setWrapStyleWord(true);
 
-        JScrollPane tweetScroll =
-                new JScrollPane(tweetArea);
+        JScrollPane tweetScroll = new JScrollPane(
+                tweetArea
+        );
 
-        JButton postTweetButton =
-                new JButton("Post Tweet");
+        JButton postTweetButton = new JButton(
+                "Post Tweet"
+        );
 
         createPanel.add(
                 tweetLabel,
@@ -97,30 +119,31 @@ public class DashboardFrame extends JFrame {
                 BorderLayout.SOUTH
         );
 
-        // =========================
-        // FEED
-        // =========================
+        // =====================================================
+        // FEED PANEL
+        // =====================================================
 
-        JPanel feedPanel =
-                new JPanel(
-                        new BorderLayout(5, 5)
-                );
+        JPanel feedPanel = new JPanel(
+                new BorderLayout(5, 5)
+        );
 
-        JLabel feedLabel =
-                new JLabel("Tweet Feed:");
+        JLabel feedLabel = new JLabel(
+                "Tweet Feed:"
+        );
 
-        feedArea =
-                new JTextArea();
+        feedArea = new JTextArea();
 
         feedArea.setEditable(false);
         feedArea.setLineWrap(true);
         feedArea.setWrapStyleWord(true);
 
-        JScrollPane feedScroll =
-                new JScrollPane(feedArea);
+        JScrollPane feedScroll = new JScrollPane(
+                feedArea
+        );
 
-        JButton refreshButton =
-                new JButton("Refresh Feed");
+        JButton refreshButton = new JButton(
+                "Refresh Feed"
+        );
 
         feedPanel.add(
                 feedLabel,
@@ -152,20 +175,21 @@ public class DashboardFrame extends JFrame {
                 BorderLayout.CENTER
         );
 
-        // =========================
-        // BOTTOM
-        // =========================
+        // =====================================================
+        // BOTTOM PANEL
+        // =====================================================
 
-        JPanel bottomPanel =
-                new JPanel(
-                        new FlowLayout()
-                );
+        JPanel bottomPanel = new JPanel(
+                new FlowLayout()
+        );
 
-        JButton checkSessionButton =
-                new JButton("Check Session");
+        JButton checkSessionButton = new JButton(
+                "Check Session"
+        );
 
-        JButton logoutButton =
-                new JButton("Logout");
+        JButton logoutButton = new JButton(
+                "Logout"
+        );
 
         bottomPanel.add(
                 checkSessionButton
@@ -180,9 +204,9 @@ public class DashboardFrame extends JFrame {
                 BorderLayout.SOUTH
         );
 
-        // =========================
+        // =====================================================
         // BUTTON ACTIONS
-        // =========================
+        // =====================================================
 
         postTweetButton.addActionListener(
                 e -> createTweet()
@@ -200,18 +224,24 @@ public class DashboardFrame extends JFrame {
                 e -> logout()
         );
 
-        // Load feed when dashboard opens
-        loadTweets();
+        // =====================================================
+        // LOAD FEED WHEN DASHBOARD OPENS
+        // =====================================================
+
+        SwingUtilities.invokeLater(
+                this::loadTweets
+        );
     }
 
-    // =========================
+    // =========================================================
     // CREATE TWEET
-    // =========================
+    // =========================================================
 
     private void createTweet() {
 
-        String content =
-                tweetArea.getText().trim();
+        String content = tweetArea
+                .getText()
+                .trim();
 
         if (content.isEmpty()) {
 
@@ -223,11 +253,29 @@ public class DashboardFrame extends JFrame {
             return;
         }
 
-        String response =
-                client.createTweet(
-                        sessionId,
-                        content
-                );
+        String response;
+
+        try {
+
+            response = client.createTweet(
+                    sessionId,
+                    content
+            );
+
+        } catch (Exception e) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Connection error:\n"
+                            + e.getMessage()
+            );
+
+            return;
+        }
+
+        // -----------------------------------------------------
+        // SUCCESS
+        // -----------------------------------------------------
 
         if (response != null
                 && response.startsWith(
@@ -243,41 +291,80 @@ public class DashboardFrame extends JFrame {
 
             loadTweets();
 
-        } else if (
-                "SESSION_INVALID".equals(response)
-        ) {
+            return;
+        }
+
+        // -----------------------------------------------------
+        // INVALID SESSION
+        // -----------------------------------------------------
+
+        if ("SESSION_INVALID".equals(response)) {
 
             JOptionPane.showMessageDialog(
                     this,
                     "Session is invalid."
             );
 
-        } else if (
-                "CONNECTION_ERROR".equals(response)
-        ) {
+            return;
+        }
+
+        // -----------------------------------------------------
+        // CONNECTION ERROR
+        // -----------------------------------------------------
+
+        if ("CONNECTION_ERROR".equals(response)) {
 
             JOptionPane.showMessageDialog(
                     this,
                     "Could not connect to server."
             );
 
-        } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Tweet creation failed."
-            );
+            return;
         }
+
+        // -----------------------------------------------------
+        // OTHER ERROR
+        // -----------------------------------------------------
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Tweet creation failed.\n"
+                        + "Server response: "
+                        + response
+        );
     }
 
-    // =========================
+    // =========================================================
     // LOAD TWEETS
-    // =========================
+    // =========================================================
 
     private void loadTweets() {
 
-        String response =
-                client.getTweets(sessionId);
+        feedArea.setText(
+                "Loading tweets..."
+        );
+
+        String response;
+
+        try {
+
+            response = client.getTweets(
+                    sessionId
+            );
+
+        } catch (Exception e) {
+
+            feedArea.setText(
+                    "Could not connect to server.\n"
+                            + e.getMessage()
+            );
+
+            return;
+        }
+
+        // -----------------------------------------------------
+        // NULL RESPONSE
+        // -----------------------------------------------------
 
         if (response == null) {
 
@@ -288,6 +375,10 @@ public class DashboardFrame extends JFrame {
             return;
         }
 
+        // -----------------------------------------------------
+        // INVALID SESSION
+        // -----------------------------------------------------
+
         if ("SESSION_INVALID".equals(response)) {
 
             feedArea.setText(
@@ -297,6 +388,10 @@ public class DashboardFrame extends JFrame {
             return;
         }
 
+        // -----------------------------------------------------
+        // CONNECTION ERROR
+        // -----------------------------------------------------
+
         if ("CONNECTION_ERROR".equals(response)) {
 
             feedArea.setText(
@@ -305,6 +400,10 @@ public class DashboardFrame extends JFrame {
 
             return;
         }
+
+        // -----------------------------------------------------
+        // SERVER MUST RETURN TWEETS|JSON
+        // -----------------------------------------------------
 
         if (!response.startsWith("TWEETS|")) {
 
@@ -316,29 +415,42 @@ public class DashboardFrame extends JFrame {
             return;
         }
 
-        String json =
-                response.substring(
-                        "TWEETS|".length()
-                );
+        String json = response.substring(
+                "TWEETS|".length()
+        );
+
+        // -----------------------------------------------------
+        // DEBUG
+        // -----------------------------------------------------
+
+        System.out.println(
+                "CLIENT TWEETS JSON = " + json
+        );
 
         try {
 
-            Gson gson = new Gson();
+            JsonElement root =
+                    JsonParser.parseString(json);
 
-            java.lang.reflect.Type listType =
-                    new TypeToken<List<Tweet>>() {
-                    }.getType();
+            if (!root.isJsonArray()) {
 
-            List<Tweet> tweets =
-                    gson.fromJson(
-                            json,
-                            listType
-                    );
+                feedArea.setText(
+                        "Server returned invalid tweet data."
+                );
+
+                return;
+            }
+
+            JsonArray tweets =
+                    root.getAsJsonArray();
 
             feedArea.setText("");
 
-            if (tweets == null
-                    || tweets.isEmpty()) {
+            // -------------------------------------------------
+            // NO TWEETS
+            // -------------------------------------------------
+
+            if (tweets.size() == 0) {
 
                 feedArea.setText(
                         "No tweets yet."
@@ -347,29 +459,93 @@ public class DashboardFrame extends JFrame {
                 return;
             }
 
-            for (Tweet tweet : tweets) {
+            // -------------------------------------------------
+            // READ EVERY TWEET
+            // -------------------------------------------------
+
+            for (JsonElement element : tweets) {
+
+                if (!element.isJsonObject()) {
+                    continue;
+                }
+
+                JsonObject tweetObject =
+                        element.getAsJsonObject();
+
+                // ---------------------------------------------
+                // ID
+                // ---------------------------------------------
+
+                String id = "";
+
+                if (tweetObject.has("id")
+                        && !tweetObject.get("id").isJsonNull()) {
+
+                    id = tweetObject
+                            .get("id")
+                            .getAsString();
+                }
+
+                // ---------------------------------------------
+                // USERNAME
+                // ---------------------------------------------
+
+                String username = "";
+
+                if (tweetObject.has("username")
+                        && !tweetObject.get("username").isJsonNull()) {
+
+                    username = tweetObject
+                            .get("username")
+                            .getAsString();
+                }
+
+                // ---------------------------------------------
+                // CONTENT
+                // ---------------------------------------------
+
+                String content = "";
+
+                if (tweetObject.has("content")
+                        && !tweetObject.get("content").isJsonNull()) {
+
+                    content = tweetObject
+                            .get("content")
+                            .getAsString();
+                }
+
+                // ---------------------------------------------
+                // CREATED AT
+                // ---------------------------------------------
+
+                String createdAt = "";
+
+                if (tweetObject.has("createdAt")
+                        && !tweetObject.get("createdAt").isJsonNull()) {
+
+                    createdAt = tweetObject
+                            .get("createdAt")
+                            .getAsString();
+                }
+
+                // ---------------------------------------------
+                // DISPLAY
+                // ---------------------------------------------
 
                 feedArea.append(
-                        "@" +
-                                tweet.getUsername() +
-                                "\n"
+                        "@" + username + "\n"
                 );
 
                 feedArea.append(
-                        tweet.getContent() +
-                                "\n"
+                        content + "\n"
                 );
 
                 feedArea.append(
-                        "Time: " +
-                                tweet.getCreatedAt() +
-                                "\n"
+                        "Time: " + createdAt + "\n"
                 );
 
                 feedArea.append(
-                        "Tweet ID: " +
-                                tweet.getId() +
-                                "\n"
+                        "Tweet ID: " + id + "\n"
                 );
 
                 feedArea.append(
@@ -379,6 +555,8 @@ public class DashboardFrame extends JFrame {
 
         } catch (Exception e) {
 
+            e.printStackTrace();
+
             feedArea.setText(
                     "Could not read tweets:\n"
                             + e.getMessage()
@@ -386,16 +564,34 @@ public class DashboardFrame extends JFrame {
         }
     }
 
-    // =========================
+    // =========================================================
     // CHECK SESSION
-    // =========================
+    // =========================================================
 
     private void checkSession() {
 
-        String response =
-                client.checkSession(
-                        sessionId
-                );
+        String response;
+
+        try {
+
+            response = client.checkSession(
+                    sessionId
+            );
+
+        } catch (Exception e) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Connection error:\n"
+                            + e.getMessage()
+            );
+
+            return;
+        }
+
+        // -----------------------------------------------------
+        // VALID
+        // -----------------------------------------------------
 
         if (response != null
                 && response.startsWith(
@@ -414,42 +610,72 @@ public class DashboardFrame extends JFrame {
                             + username
             );
 
-        } else if (
-                "SESSION_INVALID".equals(response)
-        ) {
+            return;
+        }
+
+        // -----------------------------------------------------
+        // INVALID
+        // -----------------------------------------------------
+
+        if ("SESSION_INVALID".equals(response)) {
 
             JOptionPane.showMessageDialog(
                     this,
                     "Session is invalid."
             );
 
-        } else if (
-                "CONNECTION_ERROR".equals(response)
-        ) {
+            return;
+        }
+
+        // -----------------------------------------------------
+        // CONNECTION ERROR
+        // -----------------------------------------------------
+
+        if ("CONNECTION_ERROR".equals(response)) {
 
             JOptionPane.showMessageDialog(
                     this,
                     "Could not connect to server."
             );
 
-        } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Unexpected server response:\n"
-                            + response
-            );
+            return;
         }
+
+        // -----------------------------------------------------
+        // OTHER
+        // -----------------------------------------------------
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Unexpected server response:\n"
+                        + response
+        );
     }
 
-    // =========================
+    // =========================================================
     // LOGOUT
-    // =========================
+    // =========================================================
 
     private void logout() {
 
-        String response =
-                client.logout(sessionId);
+        String response;
+
+        try {
+
+            response = client.logout(
+                    sessionId
+            );
+
+        } catch (Exception e) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Connection error:\n"
+                            + e.getMessage()
+            );
+
+            return;
+        }
 
         if ("LOGOUT_SUCCESS".equals(response)) {
 
@@ -460,21 +686,24 @@ public class DashboardFrame extends JFrame {
 
             dispose();
 
-        } else if (
-                "CONNECTION_ERROR".equals(response)
-        ) {
+            return;
+        }
+
+        if ("CONNECTION_ERROR".equals(response)) {
 
             JOptionPane.showMessageDialog(
                     this,
                     "Could not connect to server."
             );
 
-        } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Logout failed."
-            );
+            return;
         }
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Logout failed.\n"
+                        + "Server response: "
+                        + response
+        );
     }
 }
