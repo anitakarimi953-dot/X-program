@@ -37,7 +37,6 @@ public class Server {
             if (message != null && message.startsWith("REGISTER|")) {
 
                 String userData = message.substring("REGISTER|".length());
-
                 String[] parts = userData.split("\\|");
 
                 if (parts.length == 2) {
@@ -52,6 +51,24 @@ public class Server {
                         System.out.println("User registered successfully!");
                     } else {
                         System.out.println("Username already exists!");
+                    }
+                }
+
+            } else if (message != null && message.startsWith("LOGIN|")) {
+
+                String userData = message.substring("LOGIN|".length());
+                String[] parts = userData.split("\\|");
+
+                if (parts.length == 2) {
+                    String username = parts[0];
+                    String password = parts[1];
+
+                    boolean loggedIn = userManager.login(username, password);
+
+                    if (loggedIn) {
+                        System.out.println("Login successful!");
+                    } else {
+                        System.out.println("Login failed!");
                     }
                 }
             }

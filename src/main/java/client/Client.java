@@ -24,13 +24,13 @@ public class Client {
             );
 
             Message message = new Message(
-                    "REGISTER",
+                    "LOGIN",
                     "test|1234"
             );
 
             output.println(message);
 
-            System.out.println("Register request sent: " + message);
+            System.out.println("Login request sent: " + message);
 
         } catch (IOException e) {
             System.out.println("Client error: " + e.getMessage());
