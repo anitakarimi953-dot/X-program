@@ -32,31 +32,60 @@ public class Client {
 
             Gson gson = new Gson();
 
-            // Login
+            // 1. Register
+            Message registerMessage = new Message(
+                    "REGISTER",
+                    "test|Test1234"
+            );
+
+            String registerJson = gson.toJson(registerMessage);
+
+            output.println(registerJson);
+
+            System.out.println(
+                    "Register JSON: " + registerJson
+            );
+
+            String registerResponse = input.readLine();
+
+            System.out.println(
+                    "Register response: " + registerResponse
+            );
+
+            // 2. Login
             Message loginMessage = new Message(
                     "LOGIN",
-                    "test|1234"
+                    "test|Test1234"
             );
 
             String loginJson = gson.toJson(loginMessage);
 
             output.println(loginJson);
 
-            System.out.println("JSON sent: " + loginJson);
+            System.out.println(
+                    "Login JSON: " + loginJson
+            );
 
-            String response = input.readLine();
+            String loginResponse = input.readLine();
 
-            System.out.println("Server response: " + response);
+            System.out.println(
+                    "Login response: " + loginResponse
+            );
 
-            // دریافت Session ID
-            if (response != null && response.startsWith("LOGIN_SUCCESS|")) {
+            // 3. دریافت Session
+            if (loginResponse != null
+                    && loginResponse.startsWith("LOGIN_SUCCESS|")) {
 
                 String sessionId =
-                        response.substring("LOGIN_SUCCESS|".length());
+                        loginResponse.substring(
+                                "LOGIN_SUCCESS|".length()
+                        );
 
-                System.out.println("Session ID: " + sessionId);
+                System.out.println(
+                        "Session ID: " + sessionId
+                );
 
-                // Logout
+                // 4. Logout
                 Message logoutMessage = new Message(
                         "LOGOUT",
                         sessionId
@@ -66,7 +95,9 @@ public class Client {
 
                 output.println(logoutJson);
 
-                System.out.println("Logout JSON sent: " + logoutJson);
+                System.out.println(
+                        "Logout JSON: " + logoutJson
+                );
 
                 String logoutResponse = input.readLine();
 
@@ -76,6 +107,7 @@ public class Client {
             }
 
         } catch (IOException e) {
+
             System.out.println(
                     "Client error: " + e.getMessage()
             );

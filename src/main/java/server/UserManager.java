@@ -10,20 +10,41 @@ public class UserManager {
     private final List<User> users = new ArrayList<>();
 
     public boolean register(User user) {
+
         for (User existingUser : users) {
-            if (existingUser.getUsername().equals(user.getUsername())) {
+            if (existingUser.getUsername()
+                    .equals(user.getUsername())) {
+
                 return false;
             }
         }
 
-        users.add(user);
+        String hashedPassword =
+                PasswordHasher.hash(user.getPassword());
+
+        User hashedUser = new User(
+                user.getUsername(),
+                hashedPassword
+        );
+
+        users.add(hashedUser);
+
         return true;
     }
 
-    public boolean login(String username, String password) {
+    public boolean login(
+            String username,
+            String password
+    ) {
+
+        String hashedPassword =
+                PasswordHasher.hash(password);
+
         for (User user : users) {
+
             if (user.getUsername().equals(username)
-                    && user.getPassword().equals(password)) {
+                    && user.getPassword().equals(hashedPassword)) {
+
                 return true;
             }
         }
