@@ -1,7 +1,14 @@
 package client;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import common.Tweet;
+
 import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.util.List;
 
 public class DashboardFrame extends JFrame {
 
@@ -9,6 +16,7 @@ public class DashboardFrame extends JFrame {
     private final Client client;
 
     private JTextArea tweetArea;
+    private JTextArea feedArea;
 
     public DashboardFrame(String sessionId) {
 
@@ -16,13 +24,16 @@ public class DashboardFrame extends JFrame {
         this.client = new Client("localhost", 5000);
 
         setTitle("X-Program Dashboard");
-        setSize(500, 450);
+        setSize(650, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         setLayout(new BorderLayout(10, 10));
 
-        // ---------- TOP ----------
+        // =========================
+        // TOP
+        // =========================
+
         JPanel topPanel = new JPanel(
                 new GridLayout(2, 1)
         );
@@ -38,48 +49,117 @@ public class DashboardFrame extends JFrame {
 
         add(topPanel, BorderLayout.NORTH);
 
-        // ---------- CENTER ----------
-        JPanel tweetPanel = new JPanel(
-                new BorderLayout(5, 5)
-        );
+        // =========================
+        // CENTER
+        // =========================
+
+        JPanel centerPanel =
+                new JPanel(
+                        new BorderLayout(10, 10)
+                );
+
+        // =========================
+        // CREATE TWEET
+        // =========================
+
+        JPanel createPanel =
+                new JPanel(
+                        new BorderLayout(5, 5)
+                );
 
         JLabel tweetLabel =
                 new JLabel("Write your Tweet:");
 
-        tweetArea = new JTextArea(8, 35);
+        tweetArea =
+                new JTextArea(5, 40);
+
         tweetArea.setLineWrap(true);
         tweetArea.setWrapStyleWord(true);
 
-        JScrollPane scrollPane =
+        JScrollPane tweetScroll =
                 new JScrollPane(tweetArea);
 
         JButton postTweetButton =
                 new JButton("Post Tweet");
 
-        tweetPanel.add(
+        createPanel.add(
                 tweetLabel,
                 BorderLayout.NORTH
         );
 
-        tweetPanel.add(
-                scrollPane,
+        createPanel.add(
+                tweetScroll,
                 BorderLayout.CENTER
         );
 
-        tweetPanel.add(
+        createPanel.add(
                 postTweetButton,
                 BorderLayout.SOUTH
         );
 
-        add(
-                tweetPanel,
+        // =========================
+        // FEED
+        // =========================
+
+        JPanel feedPanel =
+                new JPanel(
+                        new BorderLayout(5, 5)
+                );
+
+        JLabel feedLabel =
+                new JLabel("Tweet Feed:");
+
+        feedArea =
+                new JTextArea();
+
+        feedArea.setEditable(false);
+        feedArea.setLineWrap(true);
+        feedArea.setWrapStyleWord(true);
+
+        JScrollPane feedScroll =
+                new JScrollPane(feedArea);
+
+        JButton refreshButton =
+                new JButton("Refresh Feed");
+
+        feedPanel.add(
+                feedLabel,
+                BorderLayout.NORTH
+        );
+
+        feedPanel.add(
+                feedScroll,
                 BorderLayout.CENTER
         );
 
-        // ---------- BOTTOM ----------
-        JPanel bottomPanel = new JPanel(
-                new FlowLayout()
+        feedPanel.add(
+                refreshButton,
+                BorderLayout.SOUTH
         );
+
+        centerPanel.add(
+                createPanel,
+                BorderLayout.NORTH
+        );
+
+        centerPanel.add(
+                feedPanel,
+                BorderLayout.CENTER
+        );
+
+        add(
+                centerPanel,
+                BorderLayout.CENTER
+        );
+
+        // =========================
+        // BOTTOM
+        // =========================
+
+        JPanel bottomPanel =
+                new JPanel(
+                        new FlowLayout()
+                );
 
         JButton checkSessionButton =
                 new JButton("Check Session");
@@ -100,10 +180,16 @@ public class DashboardFrame extends JFrame {
                 BorderLayout.SOUTH
         );
 
-        // ---------- ACTIONS ----------
+        // =========================
+        // BUTTON ACTIONS
+        // =========================
 
         postTweetButton.addActionListener(
                 e -> createTweet()
+        );
+
+        refreshButton.addActionListener(
+                e -> loadTweets()
         );
 
         checkSessionButton.addActionListener(
@@ -113,7 +199,14 @@ public class DashboardFrame extends JFrame {
         logoutButton.addActionListener(
                 e -> logout()
         );
+
+        // Load feed when dashboard opens
+        loadTweets();
     }
+
+    // =========================
+    // CREATE TWEET
+    // =========================
 
     private void createTweet() {
 
@@ -141,20 +234,14 @@ public class DashboardFrame extends JFrame {
                 "TWEET_CREATE_SUCCESS|"
         )) {
 
-            String tweetId =
-                    response.substring(
-                            "TWEET_CREATE_SUCCESS|"
-                                    .length()
-                    );
+            tweetArea.setText("");
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Tweet created successfully!\n"
-                            + "Tweet ID: "
-                            + tweetId
+                    "Tweet created successfully."
             );
 
-            tweetArea.setText("");
+            loadTweets();
 
         } else if (
                 "SESSION_INVALID".equals(response)
@@ -178,16 +265,137 @@ public class DashboardFrame extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Tweet creation failed.\n"
-                            + response
+                    "Tweet creation failed."
             );
         }
     }
 
+    // =========================
+    // LOAD TWEETS
+    // =========================
+
+    private void loadTweets() {
+
+        String response =
+                client.getTweets(sessionId);
+
+        if (response == null) {
+
+            feedArea.setText(
+                    "No response from server."
+            );
+
+            return;
+        }
+
+        if ("SESSION_INVALID".equals(response)) {
+
+            feedArea.setText(
+                    "Session is invalid."
+            );
+
+            return;
+        }
+
+        if ("CONNECTION_ERROR".equals(response)) {
+
+            feedArea.setText(
+                    "Could not connect to server."
+            );
+
+            return;
+        }
+
+        if (!response.startsWith("TWEETS|")) {
+
+            feedArea.setText(
+                    "Unexpected server response:\n"
+                            + response
+            );
+
+            return;
+        }
+
+        String json =
+                response.substring(
+                        "TWEETS|".length()
+                );
+
+        try {
+
+            Gson gson = new Gson();
+
+            java.lang.reflect.Type listType =
+                    new TypeToken<List<Tweet>>() {
+                    }.getType();
+
+            List<Tweet> tweets =
+                    gson.fromJson(
+                            json,
+                            listType
+                    );
+
+            feedArea.setText("");
+
+            if (tweets == null
+                    || tweets.isEmpty()) {
+
+                feedArea.setText(
+                        "No tweets yet."
+                );
+
+                return;
+            }
+
+            for (Tweet tweet : tweets) {
+
+                feedArea.append(
+                        "@" +
+                                tweet.getUsername() +
+                                "\n"
+                );
+
+                feedArea.append(
+                        tweet.getContent() +
+                                "\n"
+                );
+
+                feedArea.append(
+                        "Time: " +
+                                tweet.getCreatedAt() +
+                                "\n"
+                );
+
+                feedArea.append(
+                        "Tweet ID: " +
+                                tweet.getId() +
+                                "\n"
+                );
+
+                feedArea.append(
+                        "-------------------------\n"
+                );
+            }
+
+        } catch (Exception e) {
+
+            feedArea.setText(
+                    "Could not read tweets:\n"
+                            + e.getMessage()
+            );
+        }
+    }
+
+    // =========================
+    // CHECK SESSION
+    // =========================
+
     private void checkSession() {
 
         String response =
-                client.checkSession(sessionId);
+                client.checkSession(
+                        sessionId
+                );
 
         if (response != null
                 && response.startsWith(
@@ -233,6 +441,10 @@ public class DashboardFrame extends JFrame {
             );
         }
     }
+
+    // =========================
+    // LOGOUT
+    // =========================
 
     private void logout() {
 
