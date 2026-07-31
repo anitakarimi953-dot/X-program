@@ -19,98 +19,161 @@ public class Client {
         this.port = port;
     }
 
-    public void start() {
+    public String register(String username, String password) {
+
         try (Socket socket = new Socket(host, port)) {
 
             PrintWriter output = new PrintWriter(
-                    socket.getOutputStream(), true
+                    socket.getOutputStream(),
+                    true
             );
 
             BufferedReader input = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream())
+                    new InputStreamReader(
+                            socket.getInputStream()
+                    )
             );
 
             Gson gson = new Gson();
 
-            // 1. Register
-            Message registerMessage = new Message(
+            Message message = new Message(
                     "REGISTER",
-                    "test|Test1234"
+                    username + "|" + password
             );
 
-            String registerJson = gson.toJson(registerMessage);
+            output.println(gson.toJson(message));
 
-            output.println(registerJson);
-
-            System.out.println(
-                    "Register JSON: " + registerJson
-            );
-
-            String registerResponse = input.readLine();
-
-            System.out.println(
-                    "Register response: " + registerResponse
-            );
-
-            // 2. Login
-            Message loginMessage = new Message(
-                    "LOGIN",
-                    "test|Test1234"
-            );
-
-            String loginJson = gson.toJson(loginMessage);
-
-            output.println(loginJson);
-
-            System.out.println(
-                    "Login JSON: " + loginJson
-            );
-
-            String loginResponse = input.readLine();
-
-            System.out.println(
-                    "Login response: " + loginResponse
-            );
-
-            // 3. دریافت Session
-            if (loginResponse != null
-                    && loginResponse.startsWith("LOGIN_SUCCESS|")) {
-
-                String sessionId =
-                        loginResponse.substring(
-                                "LOGIN_SUCCESS|".length()
-                        );
-
-                System.out.println(
-                        "Session ID: " + sessionId
-                );
-
-                // 4. Logout
-                Message logoutMessage = new Message(
-                        "LOGOUT",
-                        sessionId
-                );
-
-                String logoutJson = gson.toJson(logoutMessage);
-
-                output.println(logoutJson);
-
-                System.out.println(
-                        "Logout JSON: " + logoutJson
-                );
-
-                String logoutResponse = input.readLine();
-
-                System.out.println(
-                        "Logout response: " + logoutResponse
-                );
-            }
+            return input.readLine();
 
         } catch (IOException e) {
+            return "CONNECTION_ERROR";
+        }
+    }
 
-            System.out.println(
-                    "Client error: " + e.getMessage()
+    public String login(String username, String password) {
+
+        try (Socket socket = new Socket(host, port)) {
+
+            PrintWriter output = new PrintWriter(
+                    socket.getOutputStream(),
+                    true
             );
+
+            BufferedReader input = new BufferedReader(
+                    new InputStreamReader(
+                            socket.getInputStream()
+                    )
+            );
+
+            Gson gson = new Gson();
+
+            Message message = new Message(
+                    "LOGIN",
+                    username + "|" + password
+            );
+
+            output.println(gson.toJson(message));
+
+            return input.readLine();
+
+        } catch (IOException e) {
+            return "CONNECTION_ERROR";
+        }
+    }
+
+    public String logout(String sessionId) {
+
+        try (Socket socket = new Socket(host, port)) {
+
+            PrintWriter output = new PrintWriter(
+                    socket.getOutputStream(),
+                    true
+            );
+
+            BufferedReader input = new BufferedReader(
+                    new InputStreamReader(
+                            socket.getInputStream()
+                    )
+            );
+
+            Gson gson = new Gson();
+
+            Message message = new Message(
+                    "LOGOUT",
+                    sessionId
+            );
+
+            output.println(gson.toJson(message));
+
+            return input.readLine();
+
+        } catch (IOException e) {
+            return "CONNECTION_ERROR";
+        }
+    }
+
+    public String checkSession(String sessionId) {
+
+        try (Socket socket = new Socket(host, port)) {
+
+            PrintWriter output = new PrintWriter(
+                    socket.getOutputStream(),
+                    true
+            );
+
+            BufferedReader input = new BufferedReader(
+                    new InputStreamReader(
+                            socket.getInputStream()
+                    )
+            );
+
+            Gson gson = new Gson();
+
+            Message message = new Message(
+                    "CHECK_SESSION",
+                    sessionId
+            );
+
+            output.println(gson.toJson(message));
+
+            return input.readLine();
+
+        } catch (IOException e) {
+            return "CONNECTION_ERROR";
+        }
+    }
+
+    public String createTweet(
+            String sessionId,
+            String content
+    ) {
+
+        try (Socket socket = new Socket(host, port)) {
+
+            PrintWriter output = new PrintWriter(
+                    socket.getOutputStream(),
+                    true
+            );
+
+            BufferedReader input = new BufferedReader(
+                    new InputStreamReader(
+                            socket.getInputStream()
+                    )
+            );
+
+            Gson gson = new Gson();
+
+            Message message = new Message(
+                    "CREATE_TWEET",
+                    sessionId + "|" + content
+            );
+
+            output.println(gson.toJson(message));
+
+            return input.readLine();
+
+        } catch (IOException e) {
+            return "CONNECTION_ERROR";
         }
     }
 }
