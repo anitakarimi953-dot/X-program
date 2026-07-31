@@ -23,11 +23,9 @@ public class Server {
 
     public Server(int port) {
         this.port = port;
-
         this.userManager = new UserManager();
         this.sessionManager = new SessionManager();
         this.tweetManager = new TweetManager();
-
         this.gson = new Gson();
     }
 
@@ -96,11 +94,7 @@ public class Server {
                     );
 
             if (message == null) {
-
-                output.println(
-                        "INVALID_REQUEST"
-                );
-
+                output.println("INVALID_REQUEST");
                 return;
             }
 
@@ -126,10 +120,12 @@ public class Server {
                     handleCreateTweet(message, output);
                     break;
 
+                case "GET_TWEETS":
+                    handleGetTweets(message, output);
+                    break;
+
                 default:
-                    output.println(
-                            "UNKNOWN_COMMAND"
-                    );
+                    output.println("UNKNOWN_COMMAND");
             }
 
         } catch (Exception e) {
@@ -146,17 +142,10 @@ public class Server {
     ) {
 
         String[] parts =
-                message.getContent().split(
-                        "\\|",
-                        2
-                );
+                message.getContent().split("\\|", 2);
 
         if (parts.length != 2) {
-
-            output.println(
-                    "REGISTER_FAILED"
-            );
-
+            output.println("REGISTER_FAILED");
             return;
         }
 
@@ -164,35 +153,16 @@ public class Server {
         String password = parts[1];
 
         User user =
-                new User(
-                        username,
-                        password
-                );
+                new User(username, password);
 
         boolean registered =
                 userManager.register(user);
 
-        if (registered) {
-
-            System.out.println(
-                    "User registered: " + username
-            );
-
-            output.println(
-                    "REGISTER_SUCCESS"
-            );
-
-        } else {
-
-            System.out.println(
-                    "Registration failed: "
-                            + username
-            );
-
-            output.println(
-                    "REGISTER_FAILED"
-            );
-        }
+        output.println(
+                registered
+                        ? "REGISTER_SUCCESS"
+                        : "REGISTER_FAILED"
+        );
     }
 
     private void handleLogin(
@@ -201,17 +171,10 @@ public class Server {
     ) {
 
         String[] parts =
-                message.getContent().split(
-                        "\\|",
-                        2
-                );
+                message.getContent().split("\\|", 2);
 
         if (parts.length != 2) {
-
-            output.println(
-                    "LOGIN_FAILED"
-            );
-
+            output.println("LOGIN_FAILED");
             return;
         }
 
@@ -225,15 +188,7 @@ public class Server {
                 );
 
         if (!loggedIn) {
-
-            System.out.println(
-                    "Login failed: " + username
-            );
-
-            output.println(
-                    "LOGIN_FAILED"
-            );
-
+            output.println("LOGIN_FAILED");
             return;
         }
 
@@ -241,10 +196,6 @@ public class Server {
                 sessionManager.createSession(
                         username
                 );
-
-        System.out.println(
-                "Login successful: " + username
-        );
 
         output.println(
                 "LOGIN_SUCCESS|" + sessionId
@@ -259,30 +210,14 @@ public class Server {
         String sessionId =
                 message.getContent();
 
-        if (sessionManager.isValid(sessionId)) {
-
-            sessionManager.removeSession(
-                    sessionId
-            );
-
-            System.out.println(
-                    "Logout successful"
-            );
-
-            output.println(
-                    "LOGOUT_SUCCESS"
-            );
-
-        } else {
-
-            System.out.println(
-                    "Logout failed: invalid session"
-            );
-
-            output.println(
-                    "LOGOUT_FAILED"
-            );
+        if (!sessionManager.isValid(sessionId)) {
+            output.println("LOGOUT_FAILED");
+            return;
         }
+
+        sessionManager.removeSession(sessionId);
+
+        output.println("LOGOUT_SUCCESS");
     }
 
     private void handleCheckSession(
@@ -293,31 +228,17 @@ public class Server {
         String sessionId =
                 message.getContent();
 
-        if (sessionManager.isValid(sessionId)) {
-
-            String username =
-                    sessionManager.getUsername(
-                            sessionId
-                    );
-
-            System.out.println(
-                    "Session valid: " + username
-            );
-
-            output.println(
-                    "SESSION_VALID|" + username
-            );
-
-        } else {
-
-            System.out.println(
-                    "Session invalid"
-            );
-
-            output.println(
-                    "SESSION_INVALID"
-            );
+        if (!sessionManager.isValid(sessionId)) {
+            output.println("SESSION_INVALID");
+            return;
         }
+
+        String username =
+                sessionManager.getUsername(sessionId);
+
+        output.println(
+                "SESSION_VALID|" + username
+        );
     }
 
     private void handleCreateTweet(
@@ -326,17 +247,10 @@ public class Server {
     ) {
 
         String[] parts =
-                message.getContent().split(
-                        "\\|",
-                        2
-                );
+                message.getContent().split("\\|", 2);
 
         if (parts.length != 2) {
-
-            output.println(
-                    "TWEET_CREATE_FAILED"
-            );
-
+            output.println("TWEET_CREATE_FAILED");
             return;
         }
 
@@ -344,22 +258,12 @@ public class Server {
         String content = parts[1];
 
         if (!sessionManager.isValid(sessionId)) {
-
-            System.out.println(
-                    "Create tweet rejected: invalid session"
-            );
-
-            output.println(
-                    "SESSION_INVALID"
-            );
-
+            output.println("SESSION_INVALID");
             return;
         }
 
         String username =
-                sessionManager.getUsername(
-                        sessionId
-                );
+                sessionManager.getUsername(sessionId);
 
         Tweet tweet =
                 tweetManager.createTweet(
@@ -368,21 +272,36 @@ public class Server {
                 );
 
         if (tweet == null) {
-
-            output.println(
-                    "TWEET_CREATE_FAILED"
-            );
-
+            output.println("TWEET_CREATE_FAILED");
             return;
         }
-
-        System.out.println(
-                "Tweet created by " + username
-        );
 
         output.println(
                 "TWEET_CREATE_SUCCESS|"
                         + tweet.getId()
+        );
+    }
+
+    private void handleGetTweets(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String sessionId =
+                message.getContent();
+
+        if (!sessionManager.isValid(sessionId)) {
+            output.println("SESSION_INVALID");
+            return;
+        }
+
+        String json =
+                gson.toJson(
+                        tweetManager.getAllTweets()
+                );
+
+        output.println(
+                "TWEETS|" + json
         );
     }
 }

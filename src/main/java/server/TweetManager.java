@@ -14,7 +14,6 @@ public class TweetManager {
             String username,
             String content
     ) {
-
         if (username == null || username.isBlank()) {
             return null;
         }
@@ -36,18 +35,15 @@ public class TweetManager {
     }
 
     public synchronized List<Tweet> getAllTweets() {
-
         return new ArrayList<>(tweets);
     }
 
     public synchronized List<Tweet> getTweetsByUser(
             String username
     ) {
-
         List<Tweet> result = new ArrayList<>();
 
         for (Tweet tweet : tweets) {
-
             if (tweet.getUsername().equals(username)) {
                 result.add(tweet);
             }
@@ -60,13 +56,14 @@ public class TweetManager {
             int tweetId,
             String username
     ) {
+        for (int i = 0; i < tweets.size(); i++) {
 
-        for (Tweet tweet : tweets) {
+            Tweet tweet = tweets.get(i);
 
             if (tweet.getId() == tweetId
                     && tweet.getUsername().equals(username)) {
 
-                tweets.remove(tweet);
+                tweets.remove(i);
                 return true;
             }
         }
