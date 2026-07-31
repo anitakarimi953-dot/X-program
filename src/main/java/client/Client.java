@@ -32,23 +32,53 @@ public class Client {
 
             Gson gson = new Gson();
 
-            Message message = new Message(
+            // Login
+            Message loginMessage = new Message(
                     "LOGIN",
                     "test|1234"
             );
 
-            String jsonMessage = gson.toJson(message);
+            String loginJson = gson.toJson(loginMessage);
 
-            output.println(jsonMessage);
+            output.println(loginJson);
 
-            System.out.println("JSON sent: " + jsonMessage);
+            System.out.println("JSON sent: " + loginJson);
 
             String response = input.readLine();
 
             System.out.println("Server response: " + response);
 
+            // دریافت Session ID
+            if (response != null && response.startsWith("LOGIN_SUCCESS|")) {
+
+                String sessionId =
+                        response.substring("LOGIN_SUCCESS|".length());
+
+                System.out.println("Session ID: " + sessionId);
+
+                // Logout
+                Message logoutMessage = new Message(
+                        "LOGOUT",
+                        sessionId
+                );
+
+                String logoutJson = gson.toJson(logoutMessage);
+
+                output.println(logoutJson);
+
+                System.out.println("Logout JSON sent: " + logoutJson);
+
+                String logoutResponse = input.readLine();
+
+                System.out.println(
+                        "Logout response: " + logoutResponse
+                );
+            }
+
         } catch (IOException e) {
-            System.out.println("Client error: " + e.getMessage());
+            System.out.println(
+                    "Client error: " + e.getMessage()
+            );
         }
     }
 }

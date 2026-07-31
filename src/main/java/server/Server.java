@@ -15,6 +15,7 @@ public class Server {
 
     private final int port;
     private final UserManager userManager = new UserManager();
+    private final SessionManager sessionManager = new SessionManager();
 
     public Server(int port) {
         this.port = port;
@@ -39,59 +40,152 @@ public class Server {
 
             Gson gson = new Gson();
 
-            String jsonMessage = input.readLine();
+            String jsonMessage;
 
-            System.out.println("JSON received: " + jsonMessage);
+            while ((jsonMessage = input.readLine()) != null) {
 
-            Message message = gson.fromJson(jsonMessage, Message.class);
+                System.out.println("JSON received: " + jsonMessage);
 
-            if (message.getType().equals("REGISTER")) {
+                Message message = gson.fromJson(
+                        jsonMessage,
+                        Message.class
+                );
 
-                String[] parts = message.getContent().split("\\|");
+                if (message.getType().equals("REGISTER")) {
 
-                if (parts.length == 2) {
+                    handleRegister(message, output);
 
-                    String username = parts[0];
-                    String password = parts[1];
+                } else if (message.getType().equals("LOGIN")) {
 
-                    User user = new User(username, password);
+                    handleLogin(message, output);
 
-                    boolean registered = userManager.register(user);
+                } else if (message.getType().equals("LOGOUT")) {
 
-                    if (registered) {
-                        System.out.println("User registered successfully!");
-                        output.println("REGISTER_SUCCESS");
-                    } else {
-                        System.out.println("Username already exists!");
-                        output.println("REGISTER_FAILED");
-                    }
-                }
+                    handleLogout(message, output);
 
-            } else if (message.getType().equals("LOGIN")) {
+                } else {
 
-                String[] parts = message.getContent().split("\\|");
-
-                if (parts.length == 2) {
-
-                    String username = parts[0];
-                    String password = parts[1];
-
-                    boolean loggedIn = userManager.login(username, password);
-
-                    if (loggedIn) {
-                        System.out.println("Login successful!");
-                        output.println("LOGIN_SUCCESS");
-                    } else {
-                        System.out.println("Login failed!");
-                        output.println("LOGIN_FAILED");
-                    }
+                    output.println("UNKNOWN_COMMAND");
                 }
             }
 
             clientSocket.close();
 
         } catch (IOException e) {
-            System.out.println("Server error: " + e.getMessage());
+
+            System.out.println(
+                    "Server error: " + e.getMessage()
+            );
+        }
+    }
+
+    private void handleRegister(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String[] parts = message.getContent().split("\\|");
+
+        if (parts.length != 2) {
+            output.println("REGISTER_FAILED");
+            return;
+        }
+
+        String username = parts[0];
+        String password = parts[1];
+
+        User user = new User(username, password);
+
+        boolean registered = userManager.register(user);
+
+        if (registered) {
+
+            output.println("REGISTER_SUCCESS");
+
+            System.out.println(
+                    "User registered: " + username
+            );
+
+        } else {
+
+            output.println("REGISTER_FAILED");
+
+            System.out.println(
+                    "Username already exists: " + username
+            );
+        }
+    }
+
+    private void handleLogin(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String[] parts = message.getContent().split("\\|");
+
+        if (parts.length != 2) {
+            output.println("LOGIN_FAILED");
+            return;
+        }
+
+        String username = parts[0];
+        String password = parts[1];
+
+        boolean loggedIn =
+                userManager.login(username, password);
+
+        if (loggedIn) {
+
+            String sessionId =
+                    sessionManager.createSession(username);
+
+            output.println(
+                    "LOGIN_SUCCESS|" + sessionId
+            );
+
+            System.out.println(
+                    "Login successful: " + username
+            );
+
+            System.out.println(
+                    "Session created: " + sessionId
+            );
+
+        } else {
+
+            output.println("LOGIN_FAILED");
+
+            System.out.println(
+                    "Login failed: " + username
+            );
+        }
+    }
+
+    private void handleLogout(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String sessionId = message.getContent();
+
+        if (sessionManager.isValid(sessionId)) {
+
+            String username =
+                    sessionManager.getUsername(sessionId);
+
+            sessionManager.removeSession(sessionId);
+
+            output.println("LOGOUT_SUCCESS");
+
+            System.out.println(
+                    "User logged out: " + username
+            );
+
+        } else {
+
+            output.println("LOGOUT_FAILED");
+
+            System.out.println("Invalid session!");
         }
     }
 }
