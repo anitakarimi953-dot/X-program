@@ -5,6 +5,7 @@ import common.User;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -30,6 +31,10 @@ public class Server {
                     new InputStreamReader(clientSocket.getInputStream())
             );
 
+            PrintWriter output = new PrintWriter(
+                    clientSocket.getOutputStream(), true
+            );
+
             String message = input.readLine();
 
             System.out.println("Message received: " + message);
@@ -49,8 +54,10 @@ public class Server {
 
                     if (registered) {
                         System.out.println("User registered successfully!");
+                        output.println("REGISTER_SUCCESS");
                     } else {
                         System.out.println("Username already exists!");
+                        output.println("REGISTER_FAILED");
                     }
                 }
 
@@ -67,8 +74,10 @@ public class Server {
 
                     if (loggedIn) {
                         System.out.println("Login successful!");
+                        output.println("LOGIN_SUCCESS");
                     } else {
                         System.out.println("Login failed!");
+                        output.println("LOGIN_FAILED");
                     }
                 }
             }

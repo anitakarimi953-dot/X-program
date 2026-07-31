@@ -2,7 +2,9 @@ package client;
 
 import common.Message;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -23,14 +25,22 @@ public class Client {
                     socket.getOutputStream(), true
             );
 
+            BufferedReader input = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream())
+            );
+
             Message message = new Message(
                     "LOGIN",
                     "test|1234"
             );
 
-            output.println(message);
+            output.println(
+                    message.getType() + "|" + message.getContent()
+            );
 
-            System.out.println("Login request sent: " + message);
+            String response = input.readLine();
+
+            System.out.println("Server response: " + response);
 
         } catch (IOException e) {
             System.out.println("Client error: " + e.getMessage());
