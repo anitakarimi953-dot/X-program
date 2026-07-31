@@ -1,4 +1,4 @@
-package Ap404.common;
+package common;
 
 public class Message {
 
