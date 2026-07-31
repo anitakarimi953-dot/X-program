@@ -1,5 +1,7 @@
 package server;
 
+import common.User;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,6 +33,28 @@ public class Server {
             String message = input.readLine();
 
             System.out.println("Message received: " + message);
+
+            if (message != null && message.startsWith("REGISTER|")) {
+
+                String userData = message.substring("REGISTER|".length());
+
+                String[] parts = userData.split("\\|");
+
+                if (parts.length == 2) {
+                    String username = parts[0];
+                    String password = parts[1];
+
+                    User user = new User(username, password);
+
+                    boolean registered = userManager.register(user);
+
+                    if (registered) {
+                        System.out.println("User registered successfully!");
+                    } else {
+                        System.out.println("Username already exists!");
+                    }
+                }
+            }
 
             clientSocket.close();
 

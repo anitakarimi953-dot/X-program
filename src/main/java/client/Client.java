@@ -23,11 +23,14 @@ public class Client {
                     socket.getOutputStream(), true
             );
 
-            Message message = new Message("TEXT", "Hello from client");
+            Message message = new Message(
+                    "REGISTER",
+                    "test|1234"
+            );
 
             output.println(message);
 
-            System.out.println("Message sent: " + message);
+            System.out.println("Register request sent: " + message);
 
         } catch (IOException e) {
             System.out.println("Client error: " + e.getMessage());
