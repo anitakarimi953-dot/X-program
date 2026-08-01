@@ -1,6 +1,7 @@
 package client;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import common.Tweet;
 
@@ -8,6 +9,7 @@ import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class DashboardFrame extends JFrame {
@@ -100,11 +102,12 @@ public class DashboardFrame extends JFrame {
         JPanel followPanel =
                 new JPanel(new BorderLayout(5, 5));
 
-        // Username row
         JPanel usernamePanel =
-                new JPanel(new FlowLayout(
-                        FlowLayout.LEFT
-                ));
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.LEFT
+                        )
+                );
 
         JLabel usernameLabel =
                 new JLabel("Username:");
@@ -119,7 +122,6 @@ public class DashboardFrame extends JFrame {
         usernamePanel.add(usernameLabel);
         usernamePanel.add(usernameField);
 
-        // Buttons row
         JPanel followButtons =
                 new JPanel(new FlowLayout());
 
@@ -155,7 +157,9 @@ public class DashboardFrame extends JFrame {
         // =====================================================
 
         JPanel feedPanel =
-                new JPanel(new BorderLayout(5, 5));
+                new JPanel(
+                        new BorderLayout(5, 5)
+                );
 
         JLabel feedLabel =
                 new JLabel("Tweet Feed:");
@@ -410,8 +414,18 @@ public class DashboardFrame extends JFrame {
 
         try {
 
+            /*
+             * مهم:
+             * همان Adapter که برای Server داریم،
+             * در Client هم برای LocalDateTime استفاده می‌کنیم.
+             */
             Gson gson =
-                    new Gson();
+                    new GsonBuilder()
+                            .registerTypeAdapter(
+                                    LocalDateTime.class,
+                                    new LocalDateTimeAdapter()
+                            )
+                            .create();
 
             java.lang.reflect.Type listType =
                     new TypeToken<List<Tweet>>() {
@@ -471,6 +485,8 @@ public class DashboardFrame extends JFrame {
                     "Could not read tweets:\n"
                             + e.getMessage()
             );
+
+            e.printStackTrace();
         }
     }
 
