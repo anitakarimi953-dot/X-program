@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Server {
 
@@ -27,17 +28,11 @@ public class Server {
 
         this.port = port;
 
-        this.userManager = new UserManager();
-        this.sessionManager = new SessionManager();
-        this.tweetManager = new TweetManager();
+        userManager = new UserManager();
+        sessionManager = new SessionManager();
+        tweetManager = new TweetManager();
 
-        /*
-         * Gson در Java 25 نمی‌تواند مستقیماً
-         * داخل LocalDateTime reflection انجام دهد.
-         *
-         * بنابراین Adapter ثبت می‌کنیم.
-         */
-        this.gson = new GsonBuilder()
+        gson = new GsonBuilder()
                 .registerTypeAdapter(
                         LocalDateTime.class,
                         new LocalDateTimeAdapter()
@@ -121,52 +116,31 @@ public class Server {
             switch (message.getType()) {
 
                 case "REGISTER":
-                    handleRegister(
-                            message,
-                            output
-                    );
+                    handleRegister(message, output);
                     break;
 
                 case "LOGIN":
-                    handleLogin(
-                            message,
-                            output
-                    );
+                    handleLogin(message, output);
                     break;
 
                 case "LOGOUT":
-                    handleLogout(
-                            message,
-                            output
-                    );
+                    handleLogout(message, output);
                     break;
 
                 case "CHECK_SESSION":
-                    handleCheckSession(
-                            message,
-                            output
-                    );
+                    handleCheckSession(message, output);
                     break;
 
                 case "CREATE_TWEET":
-                    handleCreateTweet(
-                            message,
-                            output
-                    );
+                    handleCreateTweet(message, output);
                     break;
 
                 case "GET_TWEETS":
-                    handleGetTweets(
-                            message,
-                            output
-                    );
+                    handleGetTweets(message, output);
                     break;
 
                 default:
-
-                    output.println(
-                            "UNKNOWN_COMMAND"
-                    );
+                    output.println("UNKNOWN_COMMAND");
             }
 
         } catch (Exception e) {
@@ -188,21 +162,28 @@ public class Server {
             PrintWriter output
     ) {
 
-        String[] parts =
-                message.getContent()
-                        .split("\\|", 2);
+        String content = message.getContent();
 
-        if (parts.length != 2) {
-
-            output.println(
-                    "REGISTER_FAILED"
-            );
-
+        if (content == null) {
+            output.println("REGISTER_FAILED");
             return;
         }
 
-        String username = parts[0];
+        String[] parts =
+                content.split("\\|", 2);
+
+        if (parts.length != 2) {
+            output.println("REGISTER_FAILED");
+            return;
+        }
+
+        String username = parts[0].trim();
         String password = parts[1];
+
+        if (username.isEmpty() || password.isEmpty()) {
+            output.println("REGISTER_FAILED");
+            return;
+        }
 
         User user =
                 new User(
@@ -240,20 +221,22 @@ public class Server {
             PrintWriter output
     ) {
 
-        String[] parts =
-                message.getContent()
-                        .split("\\|", 2);
+        String content = message.getContent();
 
-        if (parts.length != 2) {
-
-            output.println(
-                    "LOGIN_FAILED"
-            );
-
+        if (content == null) {
+            output.println("LOGIN_FAILED");
             return;
         }
 
-        String username = parts[0];
+        String[] parts =
+                content.split("\\|", 2);
+
+        if (parts.length != 2) {
+            output.println("LOGIN_FAILED");
+            return;
+        }
+
+        String username = parts[0].trim();
         String password = parts[1];
 
         boolean loggedIn =
@@ -305,11 +288,8 @@ public class Server {
         String sessionId =
                 message.getContent();
 
-        System.out.println(
-                "LOGOUT: " + sessionId
-        );
-
-        if (!sessionManager.isValid(sessionId)) {
+        if (sessionId == null ||
+                !sessionManager.isValid(sessionId)) {
 
             output.println(
                     "LOGOUT_FAILED"
@@ -343,15 +323,8 @@ public class Server {
         String sessionId =
                 message.getContent();
 
-        System.out.println(
-                "CHECK_SESSION: " + sessionId
-        );
-
-        if (!sessionManager.isValid(sessionId)) {
-
-            System.out.println(
-                    "CHECK_SESSION: invalid"
-            );
+        if (sessionId == null ||
+                !sessionManager.isValid(sessionId)) {
 
             output.println(
                     "SESSION_INVALID"
@@ -364,11 +337,6 @@ public class Server {
                 sessionManager.getUsername(
                         sessionId
                 );
-
-        System.out.println(
-                "CHECK_SESSION: valid user="
-                        + username
-        );
 
         output.println(
                 "SESSION_VALID|" + username
@@ -384,9 +352,18 @@ public class Server {
             PrintWriter output
     ) {
 
+        String content =
+                message.getContent();
+
+        if (content == null) {
+            output.println(
+                    "TWEET_CREATE_FAILED"
+            );
+            return;
+        }
+
         String[] parts =
-                message.getContent()
-                        .split("\\|", 2);
+                content.split("\\|", 2);
 
         if (parts.length != 2) {
 
@@ -398,20 +375,21 @@ public class Server {
         }
 
         String sessionId = parts[0];
-        String content = parts[1];
-
-        System.out.println(
-                "CREATE_TWEET request"
-        );
+        String tweetContent = parts[1];
 
         if (!sessionManager.isValid(sessionId)) {
 
-            System.out.println(
-                    "CREATE_TWEET: invalid session"
-            );
-
             output.println(
                     "SESSION_INVALID"
+            );
+
+            return;
+        }
+
+        if (tweetContent.trim().isEmpty()) {
+
+            output.println(
+                    "TWEET_CREATE_FAILED"
             );
 
             return;
@@ -422,22 +400,13 @@ public class Server {
                         sessionId
                 );
 
-        System.out.println(
-                "CREATE_TWEET user="
-                        + username
-        );
-
         Tweet tweet =
                 tweetManager.createTweet(
                         username,
-                        content
+                        tweetContent
                 );
 
         if (tweet == null) {
-
-            System.out.println(
-                    "CREATE_TWEET failed"
-            );
 
             output.println(
                     "TWEET_CREATE_FAILED"
@@ -447,13 +416,13 @@ public class Server {
         }
 
         System.out.println(
-                "Tweet created: id="
-                        + tweet.getId()
+                "Tweet created: id=" +
+                        tweet.getId()
         );
 
         output.println(
-                "TWEET_CREATE_SUCCESS|"
-                        + tweet.getId()
+                "TWEET_CREATE_SUCCESS|" +
+                        tweet.getId()
         );
     }
 
@@ -469,20 +438,8 @@ public class Server {
         String sessionId =
                 message.getContent();
 
-        System.out.println(
-                "GET_TWEETS request"
-        );
-
-        System.out.println(
-                "GET_TWEETS session="
-                        + sessionId
-        );
-
-        if (!sessionManager.isValid(sessionId)) {
-
-            System.out.println(
-                    "GET_TWEETS: invalid session"
-            );
+        if (sessionId == null ||
+                !sessionManager.isValid(sessionId)) {
 
             output.println(
                     "SESSION_INVALID"
@@ -491,33 +448,13 @@ public class Server {
             return;
         }
 
-        String username =
-                sessionManager.getUsername(
-                        sessionId
-                );
-
-        System.out.println(
-                "GET_TWEETS user="
-                        + username
-        );
-
         try {
 
-            java.util.List<Tweet> tweets =
+            List<Tweet> tweets =
                     tweetManager.getAllTweets();
-
-            System.out.println(
-                    "GET_TWEETS tweet count="
-                            + tweets.size()
-            );
 
             String json =
                     gson.toJson(tweets);
-
-            System.out.println(
-                    "GET_TWEETS JSON="
-                            + json
-            );
 
             output.println(
                     "TWEETS|" + json
@@ -526,11 +463,9 @@ public class Server {
         } catch (Exception e) {
 
             System.out.println(
-                    "GET_TWEETS serialization error: "
-                            + e.getMessage()
+                    "Tweet serialization error: " +
+                            e.getMessage()
             );
-
-            e.printStackTrace();
 
             output.println(
                     "TWEETS_FAILED"
