@@ -9,60 +9,46 @@ public class UserManager {
 
     private final List<User> users = new ArrayList<>();
 
-    public synchronized boolean register(User user) {
+    public boolean register(User user) {
 
-        if (user == null
-                || user.getUsername() == null
-                || user.getUsername().trim().isEmpty()
-                || user.getPassword() == null
-                || user.getPassword().isEmpty()) {
-
+        if (user == null) {
             return false;
         }
 
-        String username = user.getUsername().trim();
+        if (user.getUsername() == null
+                || user.getUsername().trim().isEmpty()) {
+            return false;
+        }
 
-        // Check duplicate username
         for (User existingUser : users) {
 
             if (existingUser.getUsername()
-                    .equalsIgnoreCase(username)) {
+                    .equals(user.getUsername())) {
 
                 return false;
             }
         }
 
-        // Hash password before storing
         String hashedPassword =
                 PasswordHasher.hash(user.getPassword());
 
         User hashedUser =
                 new User(
-                        username,
+                        user.getUsername(),
                         hashedPassword
                 );
 
         users.add(hashedUser);
 
-        System.out.println(
-                "User registered: " + username
-        );
-
-        System.out.println(
-                "Total users: " + users.size()
-        );
-
         return true;
     }
 
-    public synchronized boolean login(
+    public boolean login(
             String username,
             String password
     ) {
 
-        if (username == null
-                || password == null) {
-
+        if (username == null || password == null) {
             return false;
         }
 
@@ -72,9 +58,10 @@ public class UserManager {
         for (User user : users) {
 
             if (user.getUsername()
-                    .equalsIgnoreCase(username)
-                    && user.getPassword()
-                    .equals(hashedPassword)) {
+                    .equals(username)
+                    &&
+                    user.getPassword()
+                            .equals(hashedPassword)) {
 
                 return true;
             }
@@ -83,7 +70,124 @@ public class UserManager {
         return false;
     }
 
-    public synchronized int getUserCount() {
-        return users.size();
+    public User findUser(String username) {
+
+        if (username == null) {
+            return null;
+        }
+
+        for (User user : users) {
+
+            if (user.getUsername()
+                    .equals(username)) {
+
+                return user;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean follow(
+            String username,
+            String targetUsername
+    ) {
+
+        if (username == null
+                || targetUsername == null
+                || username.equals(targetUsername)) {
+
+            return false;
+        }
+
+        User user = findUser(username);
+        User target = findUser(targetUsername);
+
+        if (user == null || target == null) {
+            return false;
+        }
+
+        return user.getFollowing()
+                .add(targetUsername);
+    }
+
+    public boolean unfollow(
+            String username,
+            String targetUsername
+    ) {
+
+        User user = findUser(username);
+
+        if (user == null) {
+            return false;
+        }
+
+        return user.getFollowing()
+                .remove(targetUsername);
+    }
+
+    public List<String> getFollowing(
+            String username
+    ) {
+
+        User user = findUser(username);
+
+        if (user == null) {
+            return new ArrayList<>();
+        }
+
+        return new ArrayList<>(
+                user.getFollowing()
+        );
+    }
+
+    public List<String> getFollowers(
+            String username
+    ) {
+
+        List<String> followers =
+                new ArrayList<>();
+
+        if (findUser(username) == null) {
+            return followers;
+        }
+
+        for (User user : users) {
+
+            if (user.getFollowing()
+                    .contains(username)) {
+
+                followers.add(
+                        user.getUsername()
+                );
+            }
+        }
+
+        return followers;
+    }
+
+    public int getFollowingCount(
+            String username
+    ) {
+
+        User user = findUser(username);
+
+        if (user == null) {
+            return 0;
+        }
+
+        return user.getFollowing().size();
+    }
+
+    public int getFollowersCount(
+            String username
+    ) {
+
+        return getFollowers(username).size();
+    }
+
+    public List<User> getUsers() {
+
+        return new ArrayList<>(users);
     }
 }

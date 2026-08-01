@@ -14,8 +14,6 @@ public class Client {
     private final String host;
     private final int port;
 
-    private final Gson gson;
-
     public Client(
             String host,
             int port
@@ -23,8 +21,6 @@ public class Client {
 
         this.host = host;
         this.port = port;
-
-        this.gson = new Gson();
     }
 
     // =========================================================
@@ -36,21 +32,25 @@ public class Client {
             String password
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -79,21 +79,25 @@ public class Client {
             String password
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -121,21 +125,25 @@ public class Client {
             String sessionId
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -163,21 +171,25 @@ public class Client {
             String sessionId
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -206,21 +218,25 @@ public class Client {
             String content
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -248,21 +264,25 @@ public class Client {
             String sessionId
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -291,21 +311,25 @@ public class Client {
             String username
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -334,21 +358,25 @@ public class Client {
             String username
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -376,21 +404,25 @@ public class Client {
             String sessionId
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
@@ -418,26 +450,77 @@ public class Client {
             String sessionId
     ) {
 
-        try (Socket socket =
-                     new Socket(host, port);
+        try (
+                Socket socket =
+                        new Socket(host, port);
 
-             PrintWriter output =
-                     new PrintWriter(
-                             socket.getOutputStream(),
-                             true
-                     );
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
 
-             BufferedReader input =
-                     new BufferedReader(
-                             new InputStreamReader(
-                                     socket.getInputStream()
-                             )
-                     )) {
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
 
             Message message =
                     new Message(
                             "GET_FOLLOWERS",
                             sessionId
+                    );
+
+            output.println(
+                    gson.toJson(message)
+            );
+
+            return input.readLine();
+
+        } catch (IOException e) {
+
+            return "CONNECTION_ERROR";
+        }
+    }
+
+    // =========================================================
+    // GET PROFILE
+    // =========================================================
+
+    public String getProfile(
+            String sessionId,
+            String username
+    ) {
+
+        try (
+                Socket socket =
+                        new Socket(host, port);
+
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        );
+
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        )
+        ) {
+
+            Gson gson = new Gson();
+
+            Message message =
+                    new Message(
+                            "GET_PROFILE",
+                            sessionId + "|" + username
                     );
 
             output.println(

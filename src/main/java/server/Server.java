@@ -3,6 +3,7 @@ package server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import common.Message;
+import common.Profile;
 import common.Tweet;
 import common.User;
 
@@ -22,7 +23,6 @@ public class Server {
     private final UserManager userManager;
     private final SessionManager sessionManager;
     private final TweetManager tweetManager;
-    private final FollowManager followManager;
     private final Gson gson;
 
     public Server(int port) {
@@ -32,20 +32,26 @@ public class Server {
         this.userManager = new UserManager();
         this.sessionManager = new SessionManager();
         this.tweetManager = new TweetManager();
-        this.followManager = new FollowManager();
 
-        this.gson = new GsonBuilder()
-                .registerTypeAdapter(
-                        LocalDateTime.class,
-                        new LocalDateTimeAdapter()
-                )
-                .create();
+        this.gson =
+                new GsonBuilder()
+                        .registerTypeAdapter(
+                                LocalDateTime.class,
+                                new LocalDateTimeAdapter()
+                        )
+                        .create();
     }
+
+    // =========================================================
+    // START SERVER
+    // =========================================================
 
     public void start() {
 
-        try (ServerSocket serverSocket =
-                     new ServerSocket(port)) {
+        try (
+                ServerSocket serverSocket =
+                        new ServerSocket(port)
+        ) {
 
             System.out.println(
                     "Server started on port " + port
@@ -66,12 +72,19 @@ public class Server {
         } catch (IOException e) {
 
             System.out.println(
-                    "Server error: " + e.getMessage()
+                    "Server error: "
+                            + e.getMessage()
             );
         }
     }
 
-    private void handleClient(Socket socket) {
+    // =========================================================
+    // HANDLE CLIENT
+    // =========================================================
+
+    private void handleClient(
+            Socket socket
+    ) {
 
         try (
                 Socket clientSocket = socket;
@@ -90,7 +103,8 @@ public class Server {
                         )
         ) {
 
-            String json = input.readLine();
+            String json =
+                    input.readLine();
 
             if (json == null) {
                 return;
@@ -118,46 +132,106 @@ public class Server {
             switch (message.getType()) {
 
                 case "REGISTER":
-                    handleRegister(message, output);
+
+                    handleRegister(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "LOGIN":
-                    handleLogin(message, output);
+
+                    handleLogin(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "LOGOUT":
-                    handleLogout(message, output);
+
+                    handleLogout(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "CHECK_SESSION":
-                    handleCheckSession(message, output);
+
+                    handleCheckSession(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "CREATE_TWEET":
-                    handleCreateTweet(message, output);
+
+                    handleCreateTweet(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "GET_TWEETS":
-                    handleGetTweets(message, output);
+
+                    handleGetTweets(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "FOLLOW":
-                    handleFollow(message, output);
+
+                    handleFollow(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "UNFOLLOW":
-                    handleUnfollow(message, output);
+
+                    handleUnfollow(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "GET_FOLLOWING":
-                    handleGetFollowing(message, output);
+
+                    handleGetFollowing(
+                            message,
+                            output
+                    );
+
                     break;
 
                 case "GET_FOLLOWERS":
-                    handleGetFollowers(message, output);
+
+                    handleGetFollowers(
+                            message,
+                            output
+                    );
+
+                    break;
+
+                case "GET_PROFILE":
+
+                    handleGetProfile(
+                            message,
+                            output
+                    );
+
                     break;
 
                 default:
+
                     output.println(
                             "UNKNOWN_COMMAND"
                     );
@@ -166,7 +240,8 @@ public class Server {
         } catch (Exception e) {
 
             System.out.println(
-                    "Client error: " + e.getMessage()
+                    "Client error: "
+                            + e.getMessage()
             );
 
             e.printStackTrace();
@@ -195,8 +270,11 @@ public class Server {
             return;
         }
 
-        String username = parts[0];
-        String password = parts[1];
+        String username =
+                parts[0].trim();
+
+        String password =
+                parts[1];
 
         User user =
                 new User(
@@ -205,13 +283,27 @@ public class Server {
                 );
 
         boolean registered =
-                userManager.register(user);
+                userManager.register(
+                        user
+                );
 
-        output.println(
-                registered
-                        ? "REGISTER_SUCCESS"
-                        : "REGISTER_FAILED"
-        );
+        if (registered) {
+
+            System.out.println(
+                    "User registered: "
+                            + username
+            );
+
+            output.println(
+                    "REGISTER_SUCCESS"
+            );
+
+        } else {
+
+            output.println(
+                    "REGISTER_FAILED"
+            );
+        }
     }
 
     // =========================================================
@@ -236,8 +328,11 @@ public class Server {
             return;
         }
 
-        String username = parts[0];
-        String password = parts[1];
+        String username =
+                parts[0].trim();
+
+        String password =
+                parts[1];
 
         boolean loggedIn =
                 userManager.login(
@@ -246,6 +341,11 @@ public class Server {
                 );
 
         if (!loggedIn) {
+
+            System.out.println(
+                    "Login failed: "
+                            + username
+            );
 
             output.println(
                     "LOGIN_FAILED"
@@ -259,8 +359,19 @@ public class Server {
                         username
                 );
 
+        System.out.println(
+                "Login successful: "
+                        + username
+        );
+
+        System.out.println(
+                "Session created: "
+                        + sessionId
+        );
+
         output.println(
-                "LOGIN_SUCCESS|" + sessionId
+                "LOGIN_SUCCESS|"
+                        + sessionId
         );
     }
 
@@ -274,9 +385,11 @@ public class Server {
     ) {
 
         String sessionId =
-                message.getContent();
+                message.getContent().trim();
 
-        if (!sessionManager.isValid(sessionId)) {
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
 
             output.println(
                     "LOGOUT_FAILED"
@@ -287,6 +400,10 @@ public class Server {
 
         sessionManager.removeSession(
                 sessionId
+        );
+
+        System.out.println(
+                "Logout successful"
         );
 
         output.println(
@@ -304,9 +421,11 @@ public class Server {
     ) {
 
         String sessionId =
-                message.getContent();
+                message.getContent().trim();
 
-        if (!sessionManager.isValid(sessionId)) {
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
 
             output.println(
                     "SESSION_INVALID"
@@ -321,7 +440,8 @@ public class Server {
                 );
 
         output.println(
-                "SESSION_VALID|" + username
+                "SESSION_VALID|"
+                        + username
         );
     }
 
@@ -347,10 +467,15 @@ public class Server {
             return;
         }
 
-        String sessionId = parts[0];
-        String content = parts[1];
+        String sessionId =
+                parts[0].trim();
 
-        if (!sessionManager.isValid(sessionId)) {
+        String content =
+                parts[1];
+
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
 
             output.println(
                     "SESSION_INVALID"
@@ -395,9 +520,11 @@ public class Server {
     ) {
 
         String sessionId =
-                message.getContent();
+                message.getContent().trim();
 
-        if (!sessionManager.isValid(sessionId)) {
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
 
             output.println(
                     "SESSION_INVALID"
@@ -415,15 +542,13 @@ public class Server {
                     gson.toJson(tweets);
 
             output.println(
-                    "TWEETS|" + json
+                    "TWEETS|"
+                            + json
             );
 
         } catch (Exception e) {
 
-            System.out.println(
-                    "GET_TWEETS error: "
-                            + e.getMessage()
-            );
+            e.printStackTrace();
 
             output.println(
                     "TWEETS_FAILED"
@@ -453,10 +578,15 @@ public class Server {
             return;
         }
 
-        String sessionId = parts[0];
-        String targetUsername = parts[1];
+        String sessionId =
+                parts[0].trim();
 
-        if (!sessionManager.isValid(sessionId)) {
+        String targetUsername =
+                parts[1].trim();
+
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
 
             output.println(
                     "SESSION_INVALID"
@@ -470,13 +600,54 @@ public class Server {
                         sessionId
                 );
 
+        System.out.println(
+                "=============================="
+        );
+
+        System.out.println(
+                "FOLLOW REQUEST"
+        );
+
+        System.out.println(
+                "Current user: ["
+                        + username
+                        + "]"
+        );
+
+        System.out.println(
+                "Target user: ["
+                        + targetUsername
+                        + "]"
+        );
+
+        boolean targetExists =
+                userManager.findUser(
+                        targetUsername
+                ) != null;
+
+        System.out.println(
+                "Target exists: "
+                        + targetExists
+        );
+
         boolean success =
-                followManager.follow(
+                userManager.follow(
                         username,
                         targetUsername
                 );
 
+        System.out.println(
+                "Follow result: "
+                        + success
+        );
+
         if (success) {
+
+            System.out.println(
+                    username
+                            + " followed "
+                            + targetUsername
+            );
 
             output.println(
                     "FOLLOW_SUCCESS"
@@ -484,10 +655,18 @@ public class Server {
 
         } else {
 
+            System.out.println(
+                    "FOLLOW_FAILED"
+            );
+
             output.println(
                     "FOLLOW_FAILED"
             );
         }
+
+        System.out.println(
+                "=============================="
+        );
     }
 
     // =========================================================
@@ -512,10 +691,15 @@ public class Server {
             return;
         }
 
-        String sessionId = parts[0];
-        String targetUsername = parts[1];
+        String sessionId =
+                parts[0].trim();
 
-        if (!sessionManager.isValid(sessionId)) {
+        String targetUsername =
+                parts[1].trim();
+
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
 
             output.println(
                     "SESSION_INVALID"
@@ -529,11 +713,23 @@ public class Server {
                         sessionId
                 );
 
+        System.out.println(
+                "UNFOLLOW REQUEST: "
+                        + username
+                        + " -> "
+                        + targetUsername
+        );
+
         boolean success =
-                followManager.unfollow(
+                userManager.unfollow(
                         username,
                         targetUsername
                 );
+
+        System.out.println(
+                "Unfollow result: "
+                        + success
+        );
 
         if (success) {
 
@@ -559,9 +755,11 @@ public class Server {
     ) {
 
         String sessionId =
-                message.getContent();
+                message.getContent().trim();
 
-        if (!sessionManager.isValid(sessionId)) {
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
 
             output.println(
                     "SESSION_INVALID"
@@ -575,16 +773,17 @@ public class Server {
                         sessionId
                 );
 
-        List<String> users =
-                followManager.getFollowing(
+        List<String> following =
+                userManager.getFollowing(
                         username
                 );
 
         String json =
-                gson.toJson(users);
+                gson.toJson(following);
 
         output.println(
-                "FOLLOWING|" + json
+                "FOLLOWING|"
+                        + json
         );
     }
 
@@ -598,9 +797,11 @@ public class Server {
     ) {
 
         String sessionId =
-                message.getContent();
+                message.getContent().trim();
 
-        if (!sessionManager.isValid(sessionId)) {
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
 
             output.println(
                     "SESSION_INVALID"
@@ -614,16 +815,101 @@ public class Server {
                         sessionId
                 );
 
-        List<String> users =
-                followManager.getFollowers(
+        List<String> followers =
+                userManager.getFollowers(
                         username
                 );
 
         String json =
-                gson.toJson(users);
+                gson.toJson(followers);
 
         output.println(
-                "FOLLOWERS|" + json
+                "FOLLOWERS|"
+                        + json
+        );
+    }
+
+    // =========================================================
+    // GET PROFILE
+    // =========================================================
+
+    private void handleGetProfile(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String[] parts =
+                message.getContent()
+                        .split("\\|", 2);
+
+        if (parts.length != 2) {
+
+            output.println(
+                    "PROFILE_FAILED"
+            );
+
+            return;
+        }
+
+        String sessionId =
+                parts[0].trim();
+
+        String username =
+                parts[1].trim();
+
+        if (!sessionManager.isValid(
+                sessionId
+        )) {
+
+            output.println(
+                    "SESSION_INVALID"
+            );
+
+            return;
+        }
+
+        User user =
+                userManager.findUser(
+                        username
+                );
+
+        if (user == null) {
+
+            output.println(
+                    "USER_NOT_FOUND"
+            );
+
+            return;
+        }
+
+        int followersCount =
+                userManager.getFollowersCount(
+                        username
+                );
+
+        int followingCount =
+                userManager.getFollowingCount(
+                        username
+                );
+
+        Profile profile =
+                new Profile(
+                        user.getUsername(),
+                        followersCount,
+                        followingCount
+                );
+
+        String json =
+                gson.toJson(profile);
+
+        System.out.println(
+                "GET_PROFILE: "
+                        + json
+        );
+
+        output.println(
+                "PROFILE|"
+                        + json
         );
     }
 }
