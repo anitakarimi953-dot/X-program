@@ -1,14 +1,17 @@
 package client;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import common.Profile;
 import common.Tweet;
+import server.LocalDateTimeAdapter;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class DashboardFrame extends JFrame {
@@ -27,63 +30,46 @@ public class DashboardFrame extends JFrame {
         this.client = new Client("localhost", 5000);
 
         setTitle("X-Program Dashboard");
-        setSize(700, 700);
+        setSize(700, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        setLayout(
-                new BorderLayout(10, 10)
-        );
+        setLayout(new BorderLayout(10, 10));
 
         // =====================================================
         // TOP
         // =====================================================
 
         JPanel topPanel =
-                new JPanel(
-                        new GridLayout(2, 1)
-                );
+                new JPanel(new GridLayout(2, 1));
 
         JLabel welcomeLabel =
-                new JLabel(
-                        "Welcome to X-Program!"
-                );
+                new JLabel("Welcome to X-Program!");
 
         JLabel sessionLabel =
-                new JLabel(
-                        "Session: " + sessionId
-                );
+                new JLabel("Session: " + sessionId);
 
         topPanel.add(welcomeLabel);
         topPanel.add(sessionLabel);
 
-        add(
-                topPanel,
-                BorderLayout.NORTH
-        );
+        add(topPanel, BorderLayout.NORTH);
 
         // =====================================================
         // CENTER
         // =====================================================
 
         JPanel centerPanel =
-                new JPanel(
-                        new BorderLayout(10, 10)
-                );
+                new JPanel(new BorderLayout(10, 10));
 
         // =====================================================
         // CREATE TWEET
         // =====================================================
 
         JPanel createPanel =
-                new JPanel(
-                        new BorderLayout(5, 5)
-                );
+                new JPanel(new BorderLayout(5, 5));
 
         JLabel tweetLabel =
-                new JLabel(
-                        "Write your Tweet:"
-                );
+                new JLabel("Write your Tweet:");
 
         tweetArea =
                 new JTextArea(5, 40);
@@ -92,14 +78,10 @@ public class DashboardFrame extends JFrame {
         tweetArea.setWrapStyleWord(true);
 
         JScrollPane tweetScroll =
-                new JScrollPane(
-                        tweetArea
-                );
+                new JScrollPane(tweetArea);
 
         JButton postTweetButton =
-                new JButton(
-                        "Post Tweet"
-                );
+                new JButton("Post Tweet");
 
         createPanel.add(
                 tweetLabel,
@@ -117,13 +99,11 @@ public class DashboardFrame extends JFrame {
         );
 
         // =====================================================
-        // FOLLOW / PROFILE PANEL
+        // FOLLOW PANEL
         // =====================================================
 
         JPanel followPanel =
-                new JPanel(
-                        new BorderLayout(5, 5)
-                );
+                new JPanel(new BorderLayout(5, 5));
 
         usernameField =
                 new JTextField();
@@ -133,54 +113,28 @@ public class DashboardFrame extends JFrame {
         );
 
         JPanel followButtons =
-                new JPanel(
-                        new FlowLayout()
-                );
+                new JPanel(new FlowLayout());
 
         JButton followButton =
-                new JButton(
-                        "Follow"
-                );
+                new JButton("Follow");
 
         JButton unfollowButton =
-                new JButton(
-                        "Unfollow"
-                );
+                new JButton("Unfollow");
 
         JButton followingButton =
-                new JButton(
-                        "Following"
-                );
+                new JButton("Following");
 
         JButton followersButton =
-                new JButton(
-                        "Followers"
-                );
+                new JButton("Followers");
 
         JButton profileButton =
-                new JButton(
-                        "View Profile"
-                );
+                new JButton("View Profile");
 
-        followButtons.add(
-                followButton
-        );
-
-        followButtons.add(
-                unfollowButton
-        );
-
-        followButtons.add(
-                followingButton
-        );
-
-        followButtons.add(
-                followersButton
-        );
-
-        followButtons.add(
-                profileButton
-        );
+        followButtons.add(followButton);
+        followButtons.add(unfollowButton);
+        followButtons.add(followingButton);
+        followButtons.add(followersButton);
+        followButtons.add(profileButton);
 
         followPanel.add(
                 usernameField,
@@ -197,14 +151,10 @@ public class DashboardFrame extends JFrame {
         // =====================================================
 
         JPanel feedPanel =
-                new JPanel(
-                        new BorderLayout(5, 5)
-                );
+                new JPanel(new BorderLayout(5, 5));
 
         JLabel feedLabel =
-                new JLabel(
-                        "Tweet Feed:"
-                );
+                new JLabel("Tweet Feed:");
 
         feedArea =
                 new JTextArea();
@@ -214,14 +164,10 @@ public class DashboardFrame extends JFrame {
         feedArea.setWrapStyleWord(true);
 
         JScrollPane feedScroll =
-                new JScrollPane(
-                        feedArea
-                );
+                new JScrollPane(feedArea);
 
         JButton refreshButton =
-                new JButton(
-                        "Refresh Feed"
-                );
+                new JButton("Refresh Feed");
 
         feedPanel.add(
                 feedLabel,
@@ -277,19 +223,13 @@ public class DashboardFrame extends JFrame {
         // =====================================================
 
         JPanel bottomPanel =
-                new JPanel(
-                        new FlowLayout()
-                );
+                new JPanel(new FlowLayout());
 
         JButton checkSessionButton =
-                new JButton(
-                        "Check Session"
-                );
+                new JButton("Check Session");
 
         JButton logoutButton =
-                new JButton(
-                        "Logout"
-                );
+                new JButton("Logout");
 
         bottomPanel.add(
                 checkSessionButton
@@ -424,9 +364,7 @@ public class DashboardFrame extends JFrame {
     private void loadTweets() {
 
         String response =
-                client.getTweets(
-                        sessionId
-                );
+                client.getTweets(sessionId);
 
         if (response == null) {
 
@@ -472,8 +410,16 @@ public class DashboardFrame extends JFrame {
 
         try {
 
+            // IMPORTANT:
+            // Gson must know how to handle LocalDateTime.
+
             Gson gson =
-                    new Gson();
+                    new GsonBuilder()
+                            .registerTypeAdapter(
+                                    LocalDateTime.class,
+                                    new LocalDateTimeAdapter()
+                            )
+                            .create();
 
             java.lang.reflect.Type listType =
                     new TypeToken<List<Tweet>>() {
@@ -565,8 +511,7 @@ public class DashboardFrame extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "You are now following @"
-                            + username
+                    "You are now following @" + username
             );
 
             usernameField.setText("");
@@ -593,8 +538,7 @@ public class DashboardFrame extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Could not follow @"
-                            + username
+                    "Could not follow @" + username
             );
         }
     }
@@ -628,8 +572,7 @@ public class DashboardFrame extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "You unfollowed @"
-                            + username
+                    "You unfollowed @" + username
             );
 
             usernameField.setText("");
@@ -656,8 +599,7 @@ public class DashboardFrame extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Could not unfollow @"
-                            + username
+                    "Could not unfollow @" + username
             );
         }
     }
@@ -669,9 +611,7 @@ public class DashboardFrame extends JFrame {
     private void showFollowing() {
 
         String response =
-                client.getFollowing(
-                        sessionId
-                );
+                client.getFollowing(sessionId);
 
         if ("SESSION_INVALID".equals(response)) {
 
@@ -694,9 +634,7 @@ public class DashboardFrame extends JFrame {
         }
 
         if (response == null
-                || !response.startsWith(
-                "FOLLOWING|"
-        )) {
+                || !response.startsWith("FOLLOWING|")) {
 
             JOptionPane.showMessageDialog(
                     this,
@@ -771,9 +709,7 @@ public class DashboardFrame extends JFrame {
     private void showFollowers() {
 
         String response =
-                client.getFollowers(
-                        sessionId
-                );
+                client.getFollowers(sessionId);
 
         if ("SESSION_INVALID".equals(response)) {
 
@@ -796,9 +732,7 @@ public class DashboardFrame extends JFrame {
         }
 
         if (response == null
-                || !response.startsWith(
-                "FOLLOWERS|"
-        )) {
+                || !response.startsWith("FOLLOWERS|")) {
 
             JOptionPane.showMessageDialog(
                     this,
@@ -915,17 +849,14 @@ public class DashboardFrame extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "User @" + username
-                            + " was not found."
+                    "User @" + username + " not found."
             );
 
             return;
         }
 
         if (response == null
-                || !response.startsWith(
-                "PROFILE|"
-        )) {
+                || !response.startsWith("PROFILE|")) {
 
             JOptionPane.showMessageDialog(
                     this,
@@ -962,24 +893,20 @@ public class DashboardFrame extends JFrame {
                 return;
             }
 
-            String profileText =
+            String text =
                     "Profile\n\n"
                             + "Username: @"
                             + profile.getUsername()
-                            + "\n\n"
+                            + "\n"
                             + "Followers: "
-                            + profile
-                            .getFollowersCount()
+                            + profile.getFollowersCount()
                             + "\n"
                             + "Following: "
-                            + profile
-                            .getFollowingCount();
+                            + profile.getFollowingCount();
 
             JOptionPane.showMessageDialog(
                     this,
-                    profileText,
-                    "User Profile",
-                    JOptionPane.INFORMATION_MESSAGE
+                    text
             );
 
         } catch (Exception e) {
@@ -1055,9 +982,7 @@ public class DashboardFrame extends JFrame {
     private void logout() {
 
         String response =
-                client.logout(
-                        sessionId
-                );
+                client.logout(sessionId);
 
         if ("LOGOUT_SUCCESS".equals(response)) {
 
