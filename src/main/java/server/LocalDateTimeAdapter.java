@@ -1,35 +1,43 @@
 package server;
 
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonSerializer;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 public class LocalDateTimeAdapter
-        implements JsonSerializer<LocalDateTime>,
-        JsonDeserializer<LocalDateTime> {
+        extends TypeAdapter<LocalDateTime> {
 
     @Override
-    public com.google.gson.JsonElement serialize(
-            LocalDateTime src,
-            java.lang.reflect.Type typeOfSrc,
-            com.google.gson.JsonSerializationContext context
-    ) {
+    public void write(
+            JsonWriter out,
+            LocalDateTime value
+    ) throws IOException {
 
-        return new com.google.gson.JsonPrimitive(
-                src.toString()
-        );
+        if (value == null) {
+            out.nullValue();
+            return;
+        }
+
+        out.value(value.toString());
     }
 
     @Override
-    public LocalDateTime deserialize(
-            com.google.gson.JsonElement json,
-            java.lang.reflect.Type typeOfT,
-            com.google.gson.JsonDeserializationContext context
-    ) {
+    public LocalDateTime read(
+            JsonReader in
+    ) throws IOException {
+
+        if (in.peek() ==
+                com.google.gson.stream.JsonToken.NULL) {
+
+            in.nextNull();
+            return null;
+        }
 
         return LocalDateTime.parse(
-                json.getAsString()
+                in.nextString()
         );
     }
 }

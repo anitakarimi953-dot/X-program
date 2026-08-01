@@ -7,38 +7,20 @@ import java.util.List;
 
 public class UserManager {
 
-    private final List<User> users =
-            new ArrayList<>();
+    private final List<User> users = new ArrayList<>();
 
-    // =========================================================
-    // REGISTER
-    // =========================================================
+    public synchronized boolean register(User user) {
 
-    public boolean register(User user) {
-
-        if (user == null) {
-            return false;
-        }
-
-        String username =
-                user.getUsername();
-
-        String password =
-                user.getPassword();
-
-        if (username == null ||
-                password == null) {
+        if (user == null
+                || user.getUsername() == null
+                || user.getUsername().trim().isEmpty()
+                || user.getPassword() == null
+                || user.getPassword().isEmpty()) {
 
             return false;
         }
 
-        username = username.trim();
-
-        if (username.isEmpty() ||
-                password.isEmpty()) {
-
-            return false;
-        }
+        String username = user.getUsername().trim();
 
         // Check duplicate username
         for (User existingUser : users) {
@@ -52,7 +34,7 @@ public class UserManager {
 
         // Hash password before storing
         String hashedPassword =
-                PasswordHasher.hash(password);
+                PasswordHasher.hash(user.getPassword());
 
         User hashedUser =
                 new User(
@@ -63,31 +45,23 @@ public class UserManager {
         users.add(hashedUser);
 
         System.out.println(
-                "Registered user: " + username
+                "User registered: " + username
+        );
+
+        System.out.println(
+                "Total users: " + users.size()
         );
 
         return true;
     }
 
-    // =========================================================
-    // LOGIN
-    // =========================================================
-
-    public boolean login(
+    public synchronized boolean login(
             String username,
             String password
     ) {
 
-        if (username == null ||
-                password == null) {
-
-            return false;
-        }
-
-        username = username.trim();
-
-        if (username.isEmpty() ||
-                password.isEmpty()) {
+        if (username == null
+                || password == null) {
 
             return false;
         }
@@ -99,13 +73,8 @@ public class UserManager {
 
             if (user.getUsername()
                     .equalsIgnoreCase(username)
-                    &&
-                    user.getPassword()
-                            .equals(hashedPassword)) {
-
-                System.out.println(
-                        "User logged in: " + username
-                );
+                    && user.getPassword()
+                    .equals(hashedPassword)) {
 
                 return true;
             }
@@ -114,56 +83,7 @@ public class UserManager {
         return false;
     }
 
-    // =========================================================
-    // CHECK USER
-    // =========================================================
-
-    public boolean exists(String username) {
-
-        if (username == null) {
-            return false;
-        }
-
-        for (User user : users) {
-
-            if (user.getUsername()
-                    .equalsIgnoreCase(username.trim())) {
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // =========================================================
-    // GET USER
-    // =========================================================
-
-    public User getUser(String username) {
-
-        if (username == null) {
-            return null;
-        }
-
-        for (User user : users) {
-
-            if (user.getUsername()
-                    .equalsIgnoreCase(username.trim())) {
-
-                return user;
-            }
-        }
-
-        return null;
-    }
-
-    // =========================================================
-    // USER COUNT
-    // =========================================================
-
-    public int getUserCount() {
-
+    public synchronized int getUserCount() {
         return users.size();
     }
 }

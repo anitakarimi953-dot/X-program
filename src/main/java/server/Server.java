@@ -22,17 +22,19 @@ public class Server {
     private final UserManager userManager;
     private final SessionManager sessionManager;
     private final TweetManager tweetManager;
+    private final FollowManager followManager;
     private final Gson gson;
 
     public Server(int port) {
 
         this.port = port;
 
-        userManager = new UserManager();
-        sessionManager = new SessionManager();
-        tweetManager = new TweetManager();
+        this.userManager = new UserManager();
+        this.sessionManager = new SessionManager();
+        this.tweetManager = new TweetManager();
+        this.followManager = new FollowManager();
 
-        gson = new GsonBuilder()
+        this.gson = new GsonBuilder()
                 .registerTypeAdapter(
                         LocalDateTime.class,
                         new LocalDateTimeAdapter()
@@ -139,8 +141,26 @@ public class Server {
                     handleGetTweets(message, output);
                     break;
 
+                case "FOLLOW":
+                    handleFollow(message, output);
+                    break;
+
+                case "UNFOLLOW":
+                    handleUnfollow(message, output);
+                    break;
+
+                case "GET_FOLLOWING":
+                    handleGetFollowing(message, output);
+                    break;
+
+                case "GET_FOLLOWERS":
+                    handleGetFollowers(message, output);
+                    break;
+
                 default:
-                    output.println("UNKNOWN_COMMAND");
+                    output.println(
+                            "UNKNOWN_COMMAND"
+                    );
             }
 
         } catch (Exception e) {
@@ -162,28 +182,21 @@ public class Server {
             PrintWriter output
     ) {
 
-        String content = message.getContent();
-
-        if (content == null) {
-            output.println("REGISTER_FAILED");
-            return;
-        }
-
         String[] parts =
-                content.split("\\|", 2);
+                message.getContent()
+                        .split("\\|", 2);
 
         if (parts.length != 2) {
-            output.println("REGISTER_FAILED");
+
+            output.println(
+                    "REGISTER_FAILED"
+            );
+
             return;
         }
 
-        String username = parts[0].trim();
+        String username = parts[0];
         String password = parts[1];
-
-        if (username.isEmpty() || password.isEmpty()) {
-            output.println("REGISTER_FAILED");
-            return;
-        }
 
         User user =
                 new User(
@@ -194,22 +207,11 @@ public class Server {
         boolean registered =
                 userManager.register(user);
 
-        if (registered) {
-
-            System.out.println(
-                    "User registered: " + username
-            );
-
-            output.println(
-                    "REGISTER_SUCCESS"
-            );
-
-        } else {
-
-            output.println(
-                    "REGISTER_FAILED"
-            );
-        }
+        output.println(
+                registered
+                        ? "REGISTER_SUCCESS"
+                        : "REGISTER_FAILED"
+        );
     }
 
     // =========================================================
@@ -221,22 +223,20 @@ public class Server {
             PrintWriter output
     ) {
 
-        String content = message.getContent();
-
-        if (content == null) {
-            output.println("LOGIN_FAILED");
-            return;
-        }
-
         String[] parts =
-                content.split("\\|", 2);
+                message.getContent()
+                        .split("\\|", 2);
 
         if (parts.length != 2) {
-            output.println("LOGIN_FAILED");
+
+            output.println(
+                    "LOGIN_FAILED"
+            );
+
             return;
         }
 
-        String username = parts[0].trim();
+        String username = parts[0];
         String password = parts[1];
 
         boolean loggedIn =
@@ -246,10 +246,6 @@ public class Server {
                 );
 
         if (!loggedIn) {
-
-            System.out.println(
-                    "Login failed: " + username
-            );
 
             output.println(
                     "LOGIN_FAILED"
@@ -262,14 +258,6 @@ public class Server {
                 sessionManager.createSession(
                         username
                 );
-
-        System.out.println(
-                "Login successful: " + username
-        );
-
-        System.out.println(
-                "Session created: " + sessionId
-        );
 
         output.println(
                 "LOGIN_SUCCESS|" + sessionId
@@ -288,8 +276,7 @@ public class Server {
         String sessionId =
                 message.getContent();
 
-        if (sessionId == null ||
-                !sessionManager.isValid(sessionId)) {
+        if (!sessionManager.isValid(sessionId)) {
 
             output.println(
                     "LOGOUT_FAILED"
@@ -300,10 +287,6 @@ public class Server {
 
         sessionManager.removeSession(
                 sessionId
-        );
-
-        System.out.println(
-                "Logout successful"
         );
 
         output.println(
@@ -323,8 +306,7 @@ public class Server {
         String sessionId =
                 message.getContent();
 
-        if (sessionId == null ||
-                !sessionManager.isValid(sessionId)) {
+        if (!sessionManager.isValid(sessionId)) {
 
             output.println(
                     "SESSION_INVALID"
@@ -352,18 +334,9 @@ public class Server {
             PrintWriter output
     ) {
 
-        String content =
-                message.getContent();
-
-        if (content == null) {
-            output.println(
-                    "TWEET_CREATE_FAILED"
-            );
-            return;
-        }
-
         String[] parts =
-                content.split("\\|", 2);
+                message.getContent()
+                        .split("\\|", 2);
 
         if (parts.length != 2) {
 
@@ -375,21 +348,12 @@ public class Server {
         }
 
         String sessionId = parts[0];
-        String tweetContent = parts[1];
+        String content = parts[1];
 
         if (!sessionManager.isValid(sessionId)) {
 
             output.println(
                     "SESSION_INVALID"
-            );
-
-            return;
-        }
-
-        if (tweetContent.trim().isEmpty()) {
-
-            output.println(
-                    "TWEET_CREATE_FAILED"
             );
 
             return;
@@ -403,7 +367,7 @@ public class Server {
         Tweet tweet =
                 tweetManager.createTweet(
                         username,
-                        tweetContent
+                        content
                 );
 
         if (tweet == null) {
@@ -415,14 +379,9 @@ public class Server {
             return;
         }
 
-        System.out.println(
-                "Tweet created: id=" +
-                        tweet.getId()
-        );
-
         output.println(
-                "TWEET_CREATE_SUCCESS|" +
-                        tweet.getId()
+                "TWEET_CREATE_SUCCESS|"
+                        + tweet.getId()
         );
     }
 
@@ -438,8 +397,7 @@ public class Server {
         String sessionId =
                 message.getContent();
 
-        if (sessionId == null ||
-                !sessionManager.isValid(sessionId)) {
+        if (!sessionManager.isValid(sessionId)) {
 
             output.println(
                     "SESSION_INVALID"
@@ -463,13 +421,209 @@ public class Server {
         } catch (Exception e) {
 
             System.out.println(
-                    "Tweet serialization error: " +
-                            e.getMessage()
+                    "GET_TWEETS error: "
+                            + e.getMessage()
             );
 
             output.println(
                     "TWEETS_FAILED"
             );
         }
+    }
+
+    // =========================================================
+    // FOLLOW
+    // =========================================================
+
+    private void handleFollow(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String[] parts =
+                message.getContent()
+                        .split("\\|", 2);
+
+        if (parts.length != 2) {
+
+            output.println(
+                    "FOLLOW_FAILED"
+            );
+
+            return;
+        }
+
+        String sessionId = parts[0];
+        String targetUsername = parts[1];
+
+        if (!sessionManager.isValid(sessionId)) {
+
+            output.println(
+                    "SESSION_INVALID"
+            );
+
+            return;
+        }
+
+        String username =
+                sessionManager.getUsername(
+                        sessionId
+                );
+
+        boolean success =
+                followManager.follow(
+                        username,
+                        targetUsername
+                );
+
+        if (success) {
+
+            output.println(
+                    "FOLLOW_SUCCESS"
+            );
+
+        } else {
+
+            output.println(
+                    "FOLLOW_FAILED"
+            );
+        }
+    }
+
+    // =========================================================
+    // UNFOLLOW
+    // =========================================================
+
+    private void handleUnfollow(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String[] parts =
+                message.getContent()
+                        .split("\\|", 2);
+
+        if (parts.length != 2) {
+
+            output.println(
+                    "UNFOLLOW_FAILED"
+            );
+
+            return;
+        }
+
+        String sessionId = parts[0];
+        String targetUsername = parts[1];
+
+        if (!sessionManager.isValid(sessionId)) {
+
+            output.println(
+                    "SESSION_INVALID"
+            );
+
+            return;
+        }
+
+        String username =
+                sessionManager.getUsername(
+                        sessionId
+                );
+
+        boolean success =
+                followManager.unfollow(
+                        username,
+                        targetUsername
+                );
+
+        if (success) {
+
+            output.println(
+                    "UNFOLLOW_SUCCESS"
+            );
+
+        } else {
+
+            output.println(
+                    "UNFOLLOW_FAILED"
+            );
+        }
+    }
+
+    // =========================================================
+    // GET FOLLOWING
+    // =========================================================
+
+    private void handleGetFollowing(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String sessionId =
+                message.getContent();
+
+        if (!sessionManager.isValid(sessionId)) {
+
+            output.println(
+                    "SESSION_INVALID"
+            );
+
+            return;
+        }
+
+        String username =
+                sessionManager.getUsername(
+                        sessionId
+                );
+
+        List<String> users =
+                followManager.getFollowing(
+                        username
+                );
+
+        String json =
+                gson.toJson(users);
+
+        output.println(
+                "FOLLOWING|" + json
+        );
+    }
+
+    // =========================================================
+    // GET FOLLOWERS
+    // =========================================================
+
+    private void handleGetFollowers(
+            Message message,
+            PrintWriter output
+    ) {
+
+        String sessionId =
+                message.getContent();
+
+        if (!sessionManager.isValid(sessionId)) {
+
+            output.println(
+                    "SESSION_INVALID"
+            );
+
+            return;
+        }
+
+        String username =
+                sessionManager.getUsername(
+                        sessionId
+                );
+
+        List<String> users =
+                followManager.getFollowers(
+                        username
+                );
+
+        String json =
+                gson.toJson(users);
+
+        output.println(
+                "FOLLOWERS|" + json
+        );
     }
 }
